@@ -1,42 +1,10 @@
-# Create a router for your network
-resource "upcloud_router" "instance" {
-  name = "${var.basename}-router"
-}
-
-# Create a network for your cluster
-resource "upcloud_network" "instance" {
-  name = "${var.basename}-net"
-  zone = var.zone
-
-  ip_network {
-    address = var.ip_network_range
-    dhcp    = true
-    dhcp_default_route = true
-    family  = "IPv4"
-  }
-
-  router = upcloud_router.instance.id
-}
-
-# Create a Managed NAT GW for Internet connectivity from the SDN network
-resource "upcloud_gateway" "instance" {
-  name     = "${var.basename}-gw"
-  zone     = var.zone
-  features = ["nat"]
-  plan = "essentials"
-
-  router {
-    id = upcloud_router.instance.id
-  }
-}
-
 # Create a cluster
 resource "upcloud_kubernetes_cluster" "instance" {
   name                = "${var.basename}-cluster"
-  network             = upcloud_network.instance.id
+  network             = var.network
   zone                = var.zone
   private_node_groups = true
-  depends_on = [upcloud_gateway.instance]
+  depends_on = [var.gateway]
   control_plane_ip_filter = ["51.174.73.141"]
   plan = "dev-md"
 }

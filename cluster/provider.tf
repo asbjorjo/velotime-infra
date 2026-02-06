@@ -1,14 +1,11 @@
 terraform {
   required_providers {
     upcloud = {
-      source  = "upcloudLtd/upcloud"
+      source  = "UpCloudLtd/upcloud"
       version = ">= 2.11.0"
     }
   }
 }
-
-# provider "upcloud" {
-# }
 
 # Kubernetes provider configuration uses the data source
 provider "kubernetes" {

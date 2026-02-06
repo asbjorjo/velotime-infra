@@ -10,17 +10,6 @@ variable "zone" {
   type        = string
 }
 
-variable "store_kubeconfig" {
-  default     = true
-  description = "If set to `true`, store kubeconfig as a file with `local_file` to module path."
-  type        = bool
-}
-
-variable "gateway" {
-  description = "Instance gateway id."
-  type = string
-}
-
 variable "network" {
   description = "Instance network id."
   type = string
