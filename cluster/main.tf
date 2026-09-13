@@ -1,12 +1,12 @@
 # Create a cluster
 resource "upcloud_kubernetes_cluster" "instance" {
-  name                = "${var.basename}-cluster"
-  network             = var.network
-  zone                = var.zone
-  private_node_groups = true
-  depends_on = [var.gateway]
-  control_plane_ip_filter = ["51.174.73.141"]
-  plan = "dev-md"
+  name                    = "${var.basename}-cluster"
+  network                 = var.network
+  zone                    = var.zone
+  private_node_groups     = true
+  depends_on              = [var.gateway]
+  control_plane_ip_filter = var.admin_ip_filter
+  plan                    = "dev-md"
 }
 
 # Create a node group for your cluster
@@ -47,7 +47,7 @@ resource "upcloud_kubernetes_node_group" "group" {
   # }
 
   // Each node in this group will have keys defined in this list configured as authorized keys (for "debian" user)
-  ssh_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILCcus83p8a1jhwItuCLP0M3CJYwZAGDfwY0v7BG0IVH asbjorjo@hjem.ajjg.no@linux-desktop"]
+  ssh_keys = var.ssh_keys
 }
 
 data "upcloud_kubernetes_cluster" "instance" {

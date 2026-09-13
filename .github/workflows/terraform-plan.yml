@@ -43,6 +43,12 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
+      TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
+      TF_VAR_admin_ip_filter: ${{ secrets.ADMIN_IP_FILTER }}
+      TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
+      TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
+      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
+      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
 
     steps:
       - name: Checkout Code
