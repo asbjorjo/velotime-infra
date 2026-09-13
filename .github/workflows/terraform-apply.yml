@@ -1,0 +1,39 @@
+name: "OpenTofu Apply"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: opentofu-apply
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    name: "OpenTofu Apply"
+    runs-on: ubuntu-latest
+
+    env:
+      UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.8.0"
+
+      - name: OpenTofu Init
+        id: init
+        run: tofu init
+
+      - name: OpenTofu Apply
+        id: apply
+        run: tofu apply -auto-approve -input=false
