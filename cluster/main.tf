@@ -13,16 +13,22 @@ resource "upcloud_kubernetes_cluster" "instance" {
 # Node group is a group of worker nodes that are created based on the same template
 # You can have multiple node groups with different configurations in your cluster
 resource "upcloud_kubernetes_node_group" "group" {
-  name = "dev"
+  name = "default"
 
   // All nodes in this group will be joined to this cluster
   cluster = upcloud_kubernetes_cluster.instance.id
 
   // The amount of created nodes (servers)
-  node_count = 3
+  node_count = var.nodes
 
   // Plan for each node; you can check available plans with upcloud CLI tool (`upctl server plans`) or by making a call to API (https://developers.upcloud.com/1.3/7-plans/)
-  plan = "DEV-1xCPU-2GB"
+  # plan = "DEV-1xCPU-2GB"
+  plan = "CLOUDNATIVE-1xCPU-4GB"
+
+  cloud_native_plan {
+    storage_tier = "standard"
+    storage_size = 20
+  }
 
   // With `anti_affinity` set to true, UKS will attempt to deploy nodes in this group to different compute hosts
   anti_affinity = true

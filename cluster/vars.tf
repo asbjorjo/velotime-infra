@@ -10,6 +10,11 @@ variable "zone" {
   type        = string
 }
 
+variable "nodes" {
+  default = 3
+  type = number
+}
+
 variable "store_kubeconfig" {
   default     = true
   description = "If set to `true`, store kubeconfig as a file with `local_file` to module path."

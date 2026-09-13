@@ -29,4 +29,3 @@ resource "upcloud_gateway" "instance" {
     id = upcloud_router.instance.id
   }
 }
-
