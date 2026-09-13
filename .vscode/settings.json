@@ -1,6 +1,8 @@
 {
     "chat.tools.terminal.autoApprove": {
         "terraform": true,
-        "tofu": true
+        "tofu": true,
+        "git check-ignore": true,
+        "exit": true
     }
 }
