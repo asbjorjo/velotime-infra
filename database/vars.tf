@@ -12,5 +12,17 @@ variable "zone" {
 
 variable "network" {
   description = "Instance network id."
-  type = string
+  type        = string
+}
+
+variable "username" {
+  description = "Username for the database user."
+  type        = string
+  sensitive   = true
+}
+
+variable "password" {
+  description = "Password for the database user."
+  type        = string
+  sensitive   = true
 }

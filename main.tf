@@ -15,6 +15,9 @@ module "cluster" {
 
   network = module.network.network_id
   gateway = module.network.gateway_id
+
+  ssh_keys        = var.ssh_keys
+  admin_ip_filter = var.admin_ip_filter
 }
 
 module "cache" {
@@ -23,6 +26,10 @@ module "cache" {
   basename = var.basename
   network  = module.network.network_id
   zone     = var.zone
+
+  admin_ip_filter = var.admin_ip_filter
+  db_username     = var.cache_db_username
+  db_password     = var.cache_db_password
 }
 
 module "database" {
@@ -31,6 +38,9 @@ module "database" {
   basename = var.basename
   network  = module.network.network_id
   zone     = var.zone
+
+  username = var.database_username
+  password = var.database_password
 }
 
 # module "velotime" {

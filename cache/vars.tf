@@ -12,5 +12,23 @@ variable "zone" {
 
 variable "network" {
   description = "Instance network id."
-  type = string
+  type        = string
+}
+
+variable "admin_ip_filter" {
+  description = "IP addresses/CIDRs allowed to access the cache instance."
+  type        = list(string)
+  sensitive   = true
+}
+
+variable "db_username" {
+  description = "Username for the cache database user."
+  type        = string
+  sensitive   = true
+}
+
+variable "db_password" {
+  description = "Password for the cache database user."
+  type        = string
+  sensitive   = true
 }

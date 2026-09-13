@@ -12,7 +12,7 @@ variable "zone" {
 
 variable "nodes" {
   default = 3
-  type = number
+  type    = number
 }
 
 variable "store_kubeconfig" {
@@ -23,10 +23,22 @@ variable "store_kubeconfig" {
 
 variable "gateway" {
   description = "Instance gateway id."
-  type = string
+  type        = string
 }
 
 variable "network" {
   description = "Instance network id."
-  type = string
+  type        = string
+}
+
+variable "ssh_keys" {
+  description = "Authorized SSH public keys for cluster nodes."
+  type        = list(string)
+  sensitive   = true
+}
+
+variable "admin_ip_filter" {
+  description = "IP addresses/CIDRs allowed to access the cluster control plane."
+  type        = list(string)
+  sensitive   = true
 }
