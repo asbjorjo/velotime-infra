@@ -1,7 +1,7 @@
 variable "basename" {
   default     = "velotime-dev"
   description = "Instance base name."
-  type        = string 
+  type        = string
 }
 
 variable "zone" {
