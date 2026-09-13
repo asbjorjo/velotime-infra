@@ -1,5 +1,5 @@
 module "network" {
-    source = "./network"
+  source = "./network"
 
   basename = var.basename
 }
@@ -8,7 +8,7 @@ module "cluster" {
   source = "./cluster"
 
   basename         = var.basename
-  store_kubeconfig = true
+  store_kubeconfig = false
   zone             = var.zone
 
   nodes = 2
@@ -21,16 +21,16 @@ module "cache" {
   source = "./cache"
 
   basename = var.basename
-  network = module.network.network_id
-  zone = var.zone
+  network  = module.network.network_id
+  zone     = var.zone
 }
 
 module "database" {
   source = "./database"
 
   basename = var.basename
-  network = module.network.network_id
-  zone = var.zone
+  network  = module.network.network_id
+  zone     = var.zone
 }
 
 # module "velotime" {
