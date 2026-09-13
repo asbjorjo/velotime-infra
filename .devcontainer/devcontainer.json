@@ -5,7 +5,12 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/base:trixie",
 	"features": {
-		"ghcr.io/devcontainers-extra/features/opentofu:1": {}
+		"ghcr.io/devcontainers-extra/features/opentofu:1": {},
+		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+			"version": "1.35",
+			"minikube": "none",
+			"helm": "none"
+		}	
 	}
 	
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
