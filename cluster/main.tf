@@ -56,9 +56,9 @@ data "upcloud_kubernetes_cluster" "instance" {
 
 # With `hashicorp/local` Terraform provider one can output the kubeconfig to a file. The file can be easily
 # used to configure `kubectl` or any other Kubernetes client.
-# resource "local_file" "kubeconfig" {
-#   count = var.store_kubeconfig ? 1 : 0
+resource "local_file" "kubeconfig" {
+  count = var.store_kubeconfig ? 1 : 0
 
-#   content  = data.upcloud_kubernetes_cluster.instance.kubeconfig
-#   filename = "${path.module}/kubeconfig.yml"
-# }
+  content  = data.upcloud_kubernetes_cluster.instance.kubeconfig
+  filename = "${path.module}/kubeconfig.yml"
+}
