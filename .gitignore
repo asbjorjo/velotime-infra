@@ -1,6 +1,5 @@
 .env
 .terraform**
 terraform.tfstate*
-backend.s3.tfbackend
 kubeconfig.yml
 dill
