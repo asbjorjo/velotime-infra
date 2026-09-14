@@ -5,8 +5,37 @@ variable "basename" {
 }
 
 variable "zone" {
-  default     = "fi-hel1"
   description = "UpCloud zone for resource provisioning."
+  type        = string
+}
+
+variable "network_gateway_plan" {
+  default     = "essentials"
+  description = "UpCloud plan for the NAT gateway."
+  type        = string
+}
+
+variable "cluster_plan" {
+  default     = "dev-md"
+  description = "UpCloud plan for the Kubernetes cluster control plane."
+  type        = string
+}
+
+variable "cluster_node_plan" {
+  default     = "CLOUDNATIVE-1xCPU-4GB"
+  description = "UpCloud plan for the Kubernetes worker nodes."
+  type        = string
+}
+
+variable "cache_plan" {
+  default     = "1x1xCPU-1GB"
+  description = "UpCloud plan for the cache instance."
+  type        = string
+}
+
+variable "database_plan" {
+  default     = "1x1xCPU-1GB-10GB"
+  description = "UpCloud plan for the database instance."
   type        = string
 }
 

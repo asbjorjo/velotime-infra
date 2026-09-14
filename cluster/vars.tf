@@ -5,7 +5,6 @@ variable "basename" {
 }
 
 variable "zone" {
-  default     = "fi-hel1"
   description = "UpCloud zone for resource provisioning."
   type        = string
 }
@@ -13,6 +12,18 @@ variable "zone" {
 variable "nodes" {
   default = 3
   type    = number
+}
+
+variable "plan" {
+  default     = "dev-md"
+  description = "UpCloud plan for the Kubernetes cluster control plane."
+  type        = string
+}
+
+variable "node_plan" {
+  default     = "CLOUDNATIVE-1xCPU-4GB"
+  description = "UpCloud plan for the Kubernetes worker nodes."
+  type        = string
 }
 
 variable "store_kubeconfig" {

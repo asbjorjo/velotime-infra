@@ -4,13 +4,40 @@ on:
   pull_request:
     branches:
       - main
+      - production
   workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to plan against"
+        required: true
+        type: choice
+        options:
+          - development
+          - production
+        default: development
 
 permissions:
   contents: read
   pull-requests: write
 
 jobs:
+  resolve-environment:
+    name: "Resolve Environment"
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+    steps:
+      - name: Determine Target Environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.environment }}" ]; then
+            echo "environment=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.base_ref }}" = "production" ] || [ "${{ github.ref_name }}" = "production" ]; then
+            echo "environment=production" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=development" >> "$GITHUB_OUTPUT"
+          fi
+
   validate:
     name: "OpenTofu Validate"
     runs-on: ubuntu-latest
@@ -34,19 +61,26 @@ jobs:
         run: tofu validate -no-color
 
   plan:
-    name: "OpenTofu Plan"
-    needs: validate
+    name: "OpenTofu Plan (${{ needs.resolve-environment.outputs.environment }})"
+    needs: [validate, resolve-environment]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    environment: ${{ needs.resolve-environment.outputs.environment }}
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
-      TF_VAR_admin_ip_filter: ${{ secrets.ADMIN_IP_FILTER }}
+      TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
+      TF_VAR_zone: ${{ vars.ZONE }}
+      TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
+      TF_VAR_cluster_plan: ${{ vars.CLUSTER_PLAN }}
+      TF_VAR_cluster_node_plan: ${{ vars.CLUSTER_NODE_PLAN }}
+      TF_VAR_cache_plan: ${{ vars.CACHE_PLAN }}
       TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
       TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
+      TF_VAR_database_plan: ${{ vars.DATABASE_PLAN }}
       TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
       TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
 
@@ -61,7 +95,12 @@ jobs:
 
       - name: OpenTofu Init
         id: init
-        run: tofu init -input=false -backend-config=backend.s3.tfbackend
+        run: |
+          tofu init -input=false \
+            -backend-config="bucket=${{ vars.BACKEND_BUCKET }}" \
+            -backend-config="region=${{ vars.BACKEND_REGION }}" \
+            -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
+            -backend-config="skip_region_validation=true"
 
       - name: OpenTofu Validate
         id: validate
@@ -76,15 +115,18 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           PLAN: "${{ steps.plan.outputs.stdout }}"
+          DEPLOY_ENV: "${{ needs.resolve-environment.outputs.environment }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const planOutput = process.env.PLAN || '';
+            const deployEnv = process.env.DEPLOY_ENV || 'development';
             const truncatedPlan = planOutput.length > 60000
               ? planOutput.substring(0, 60000) + '\n... (output truncated)'
               : planOutput;
 
-            const output = `#### OpenTofu Initialization ⚙️\`${{ steps.init.outcome }}\`
+            const output = `#### Environment: \`${deployEnv}\`
+            #### OpenTofu Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### OpenTofu Validation 🤖\`${{ steps.validate.outcome }}\`
             #### OpenTofu Plan 📖\`${{ steps.plan.outcome }}\`
 
