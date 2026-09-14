@@ -9,10 +9,10 @@ resource "upcloud_network" "instance" {
   zone = var.zone
 
   ip_network {
-    address = var.ip_network_range
-    dhcp    = true
+    address            = var.ip_network_range
+    dhcp               = true
     dhcp_default_route = true
-    family  = "IPv4"
+    family             = "IPv4"
   }
 
   router = upcloud_router.instance.id
@@ -23,7 +23,7 @@ resource "upcloud_gateway" "instance" {
   name     = "${var.basename}-gw"
   zone     = var.zone
   features = ["nat"]
-  plan = "essentials"
+  plan     = var.gateway_plan
 
   router {
     id = upcloud_router.instance.id

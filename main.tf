@@ -1,7 +1,9 @@
 module "network" {
   source = "./network"
 
-  basename = var.basename
+  basename     = var.basename
+  zone         = var.zone
+  gateway_plan = var.network_gateway_plan
 }
 
 module "cluster" {
@@ -10,6 +12,8 @@ module "cluster" {
   basename         = var.basename
   store_kubeconfig = false
   zone             = var.zone
+  plan             = var.cluster_plan
+  node_plan        = var.cluster_node_plan
 
   nodes = 2
 
@@ -26,6 +30,7 @@ module "cache" {
   basename = var.basename
   network  = module.network.network_id
   zone     = var.zone
+  plan     = var.cache_plan
 
   admin_ip_filter = var.admin_ip_filter
   db_username     = var.cache_db_username
@@ -38,6 +43,7 @@ module "database" {
   basename = var.basename
   network  = module.network.network_id
   zone     = var.zone
+  plan     = var.database_plan
 
   username = var.database_username
   password = var.database_password

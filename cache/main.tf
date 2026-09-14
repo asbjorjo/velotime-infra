@@ -1,8 +1,8 @@
 # MySQL managed database with additional logical database: example2_db 
 resource "upcloud_managed_database_valkey" "instance" {
   name  = "velotime-dev-cache"
-  plan  = "1x1xCPU-1GB"
-  zone  = "fi-hel1"
+  plan  = var.plan
+  zone  = var.zone
   title = "Instance cache"
 
   properties {

@@ -6,7 +6,7 @@ resource "upcloud_kubernetes_cluster" "instance" {
   private_node_groups     = true
   depends_on              = [var.gateway]
   control_plane_ip_filter = var.admin_ip_filter
-  plan                    = "dev-md"
+  plan                    = var.plan
 }
 
 # Create a node group for your cluster
@@ -22,8 +22,7 @@ resource "upcloud_kubernetes_node_group" "group" {
   node_count = var.nodes
 
   // Plan for each node; you can check available plans with upcloud CLI tool (`upctl server plans`) or by making a call to API (https://developers.upcloud.com/1.3/7-plans/)
-  # plan = "DEV-1xCPU-2GB"
-  plan = "CLOUDNATIVE-1xCPU-4GB"
+  plan = var.node_plan
 
   cloud_native_plan {
     storage_tier = "standard"

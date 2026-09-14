@@ -52,8 +52,14 @@ jobs:
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
       TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
+      TF_VAR_zone: ${{ vars.ZONE }}
+      TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
+      TF_VAR_cluster_plan: ${{ vars.CLUSTER_PLAN }}
+      TF_VAR_cluster_node_plan: ${{ vars.CLUSTER_NODE_PLAN }}
+      TF_VAR_cache_plan: ${{ vars.CACHE_PLAN }}
       TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
       TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
+      TF_VAR_database_plan: ${{ vars.DATABASE_PLAN }}
       TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
       TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
 

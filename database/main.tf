@@ -1,8 +1,8 @@
 # MySQL managed database with additional logical database: example2_db 
 resource "upcloud_managed_database_postgresql" "instance" {
   name  = "velotime-dev-pg"
-  plan  = "1x1xCPU-1GB-10GB"
-  zone  = "fi-hel1"
+  plan  = var.plan
+  zone  = var.zone
   title = "Instance database"
 
   properties {

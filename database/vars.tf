@@ -5,8 +5,13 @@ variable "basename" {
 }
 
 variable "zone" {
-  default     = "fi-hel1"
   description = "UpCloud zone for resource provisioning."
+  type        = string
+}
+
+variable "plan" {
+  default     = "1x1xCPU-1GB-10GB"
+  description = "UpCloud plan for the database instance."
   type        = string
 }
 
