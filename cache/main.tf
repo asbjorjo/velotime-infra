@@ -6,7 +6,7 @@ resource "upcloud_managed_database_valkey" "instance" {
   title = "Instance cache"
 
   properties {
-    public_access = true
+    public_access = false
     ip_filter     = var.admin_ip_filter
   }
 
