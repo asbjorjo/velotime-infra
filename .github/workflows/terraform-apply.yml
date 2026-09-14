@@ -40,7 +40,7 @@ jobs:
 
       - name: OpenTofu Init
         id: init
-        run: tofu init -input=false -backend-config=backend.s3.tfbackend.example
+        run: tofu init -input=false -backend-config=backend.s3.tfbackend
 
       - name: OpenTofu Apply
         id: apply
