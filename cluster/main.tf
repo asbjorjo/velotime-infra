@@ -58,6 +58,7 @@ data "upcloud_kubernetes_cluster" "instance" {
 resource "local_file" "kubeconfig" {
   count = var.store_kubeconfig ? 1 : 0
 
-  content  = data.upcloud_kubernetes_cluster.instance.kubeconfig
-  filename = "${path.module}/kubeconfig.yml"
+  content         = data.upcloud_kubernetes_cluster.instance.kubeconfig
+  filename        = "${path.module}/kubeconfig.yml"
+  file_permission = "0600"
 }

@@ -2,6 +2,10 @@ output "cluster_id" {
   value = upcloud_kubernetes_cluster.instance.id
 }
 
+output "kubeconfig_path" {
+  value = "${path.module}/kubeconfig.yml"
+}
+
 output "host" {
   value = data.upcloud_kubernetes_cluster.instance.host
 }
