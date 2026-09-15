@@ -75,4 +75,6 @@ module "flux_operator_bootstrap" {
         password: ${var.flux_git_token}
       YAML
   }
+
+  debug_on_failure = true
 }
