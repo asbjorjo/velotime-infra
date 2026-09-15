@@ -38,7 +38,21 @@ Configure these secrets (at the environment or repository level):
 - `CLUSTER_SSH_KEYS`: SSH public keys for cluster access.
 - `DATABASE_USERNAME` / `DATABASE_PASSWORD`: Database credentials.
 - `CACHE_DB_USERNAME` / `CACHE_DB_PASSWORD`: Cache database credentials.
+- `FLUX_GIT_TOKEN`: GitHub PAT with read access to this repo, used as the Flux `flux-system` git pull secret.
 
 The derived Object Storage buckets must exist before their workflows run. Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate existing state, including state in legacy buckets such as `velotime-tfstate-dev`, to the derived bucket before the apply workflow runs.
 
 Pull requests from forks run formatting and backend-free validation only; state-backed plans run for trusted pull requests and manual workflow dispatches.
+
+## Flux CD Bootstrap
+
+The root module bootstraps [Flux Operator](https://fluxcd.control-plane.io/operator/) on the
+`cluster` module's Kubernetes cluster via the
+[`flux-operator-bootstrap`](https://github.com/controlplaneio-fluxcd/terraform-kubernetes-flux-operator-bootstrap)
+module. It reads the `FluxInstance` manifest from
+`clusters/<environment>/flux-system/flux-instance.yaml`, where `<environment>` is the
+resolved GitHub Actions deployment environment (`development` or `production`) passed in
+automatically as `TF_VAR_environment` — a matching manifest must exist for each environment
+before that environment's apply can succeed. The `flux-system` git pull secret used by
+`sync.pullSecret` is provisioned from the `FLUX_GIT_TOKEN` secret above and reconciled on
+every apply.
