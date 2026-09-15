@@ -22,7 +22,7 @@ terraform {
   }
 }
 
-Providers authenticate against the cluster module's UpCloud-managed cluster; UpCloud has no bearer token, only client cert/key.
+# Providers authenticate against the cluster module's UpCloud-managed cluster; UpCloud has no bearer token, only client cert/key.
 provider "helm" {
   kubernetes = {
     host                   = module.cluster.host
