@@ -83,16 +83,26 @@ jobs:
             echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
             exit 1
           fi
-          echo "runner_ip=$runner_ip" >> "$GITHUB_OUTPUT"
+          runner_ipv6="$(curl --fail --silent --show-error --retry 3 -6 https://api6.ipify.org)"
+          if [[ ! "$runner_ipv6" =~ : ]]; then
+            echo "The runner public IP is not a valid IPv6 address: $runner_ipv6" >&2
+            exit 1
+          fi
+          {
+            echo "runner_ip=$runner_ip"
+            echo "runner_ipv6=$runner_ipv6"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Add Runner IP To Admin Filter
         env:
           ADMIN_IP_FILTER: ${{ vars.ADMIN_IP_FILTER }}
           RUNNER_IP: ${{ steps.runner-ip.outputs.runner_ip }}
+          RUNNER_IPV6: ${{ steps.runner-ip.outputs.runner_ipv6 }}
         run: |
-          admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" '
+          admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" --arg runner_ipv6 "$RUNNER_IPV6" '
             if type != "array" then error("ADMIN_IP_FILTER must be a JSON array") else . end
             | if index($runner_ip + "/32") == null then . + [$runner_ip + "/32"] else . end
+            | if index($runner_ipv6 + "/128") == null then . + [$runner_ipv6 + "/128"] else . end
           ' <<< "$ADMIN_IP_FILTER")"
           echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
 

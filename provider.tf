@@ -15,14 +15,14 @@ terraform {
       source  = "hashicorp/helm"
       version = ">= 3.0.0"
     }
-    # kubernetes = {
-    #   source  = "hashicorp/kubernetes"
-    #   version = ">= 3.0.0"
-    # }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 3.0.0"
+    }
   }
 }
 
-# Providers authenticate against the cluster module's UpCloud-managed cluster; UpCloud has no bearer token, only client cert/key.
+Providers authenticate against the cluster module's UpCloud-managed cluster; UpCloud has no bearer token, only client cert/key.
 provider "helm" {
   kubernetes = {
     host                   = module.cluster.host
@@ -32,9 +32,9 @@ provider "helm" {
   }
 }
 
-# provider "kubernetes" {
-#   host                   = module.cluster.host
-#   cluster_ca_certificate = module.cluster.cluster_ca_certificate
-#   client_certificate     = module.cluster.client_certificate
-#   client_key             = module.cluster.client_key
-# }
+provider "kubernetes" {
+  host                   = module.cluster.host
+  cluster_ca_certificate = module.cluster.cluster_ca_certificate
+  client_certificate     = module.cluster.client_certificate
+  client_key             = module.cluster.client_key
+}
