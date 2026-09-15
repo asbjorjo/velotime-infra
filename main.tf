@@ -11,7 +11,7 @@ module "cluster" {
   source = "./cluster"
 
   basename         = var.basename
-  store_kubeconfig = false
+  store_kubeconfig = true
   zone             = var.zone
   plan             = var.cluster_plan
   node_plan        = var.cluster_node_plan
@@ -69,7 +69,7 @@ module "flux_operator_bootstrap" {
       kind: Secret
       metadata:
         name: flux-system
-      type: kubernetes.io/basic-auth
+      type: Opaque
       stringData:
         username: ${var.flux_git_username}
         password: ${var.flux_git_token}
