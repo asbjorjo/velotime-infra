@@ -14,6 +14,12 @@ variable "network_gateway_plan" {
   type        = string
 }
 
+variable "ip_network_range" {
+  default     = "172.16.2.0/24"
+  description = "CIDR range used by the cluster SDN network."
+  type        = string
+}
+
 variable "cluster_plan" {
   default     = "dev-md"
   description = "UpCloud plan for the Kubernetes cluster control plane."
