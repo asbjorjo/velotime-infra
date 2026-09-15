@@ -19,7 +19,7 @@ Configure the following variables in each GitHub Environment (`development` and 
 
 - `BACKEND_REGION`: The region of the Object Storage bucket (e.g., `europe-1`).
 - `BACKEND_ENDPOINT`: The S3-compatible endpoint URL (e.g., `https://spfj4.upcloudobjects.com`).
-- `ADMIN_IP_FILTER`: Allowed IP addresses/CIDRs JSON/string list for admin access.
+- `ADMIN_IP_FILTER`: JSON array of allowed IP addresses/CIDRs for admin access, such as `["203.0.113.10/32"]`. This is the base value for Terraform's `admin_ip_filter` variable. Each plan and apply workflow run appends its ephemeral GitHub Actions runner IPv4 as a `/32` before OpenTofu initializes, while preserving the configured entries.
 - `ZONE` **(required)**: UpCloud zone used by the `network`, `cluster`, `cache`, and `database` modules (e.g., `fi-hel1`).
 - `NETWORK_GATEWAY_PLAN` *(optional)*: UpCloud plan for the NAT gateway. Defaults to `essentials`.
 - `NETWORK_IP_RANGE` *(optional)*: CIDR range for the cluster SDN network. Defaults to `172.16.2.0/24`.
