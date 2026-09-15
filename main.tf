@@ -16,7 +16,7 @@ module "cluster" {
   plan             = var.cluster_plan
   node_plan        = var.cluster_node_plan
 
-  nodes = 2
+  nodes = 1
 
   network = module.network.network_id
   gateway = module.network.gateway_id
@@ -25,30 +25,30 @@ module "cluster" {
   admin_ip_filter = var.admin_ip_filter
 }
 
-module "cache" {
-  source = "./cache"
+# module "cache" {
+#   source = "./cache"
 
-  basename = var.basename
-  network  = module.network.network_id
-  zone     = var.zone
-  plan     = var.cache_plan
+#   basename = var.basename
+#   network  = module.network.network_id
+#   zone     = var.zone
+#   plan     = var.cache_plan
 
-  admin_ip_filter = var.admin_ip_filter
-  db_username     = var.cache_db_username
-  db_password     = var.cache_db_password
-}
+#   admin_ip_filter = var.admin_ip_filter
+#   db_username     = var.cache_db_username
+#   db_password     = var.cache_db_password
+# }
 
-module "database" {
-  source = "./database"
+# module "database" {
+#   source = "./database"
 
-  basename = var.basename
-  network  = module.network.network_id
-  zone     = var.zone
-  plan     = var.database_plan
+#   basename = var.basename
+#   network  = module.network.network_id
+#   zone     = var.zone
+#   plan     = var.database_plan
 
-  username = var.database_username
-  password = var.database_password
-}
+#   username = var.database_username
+#   password = var.database_password
+# }
 
 module "flux_operator_bootstrap" {
   source  = "controlplaneio-fluxcd/flux-operator-bootstrap/kubernetes"
@@ -76,13 +76,3 @@ module "flux_operator_bootstrap" {
       YAML
   }
 }
-
-# module "velotime" {
-#   source = "./application"
-
-#   cluster_id = module.cluster.cluster_id
-#   database_id = module.database.database_id
-#   database_host = module.database.database_host
-#   database_port = module.database.database_port
-#   velotime_version = "latest"
-# }
