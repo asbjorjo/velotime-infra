@@ -105,6 +105,16 @@ jobs:
           ' <<< "$ADMIN_IP_FILTER")"
           echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
 
+      - name: Setup UpCloud CLI
+        uses: upcloudltd/upcloud-cli-action@main
+        with:
+          token: ${{ secrets.UPCLOUD_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Modify Cluster Admin IP Filter
+        run: upctl kubernetes modify ${{ needs.resolve-environment.outputs.environment }}-cluster --kubernetes-api-allow-ip "$ADMIN_IP_FILTER"
+
       - name: OpenTofu Init
         id: init
         run: |
