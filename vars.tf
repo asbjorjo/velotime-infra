@@ -92,7 +92,6 @@ variable "flux_bootstrap_revision" {
 }
 
 variable "flux_git_username" {
-  default     = "flux"
   description = "Username for the flux-system git pull secret (HTTPS basic-auth)."
   type        = string
 }

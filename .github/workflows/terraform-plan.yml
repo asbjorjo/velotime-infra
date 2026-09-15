@@ -74,6 +74,7 @@ jobs:
       TF_VAR_basename: ${{ needs.resolve-environment.outputs.environment }}
       TF_VAR_environment: ${{ needs.resolve-environment.outputs.environment }}
       TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
+      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
       TF_VAR_zone: ${{ vars.ZONE }}
       TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
