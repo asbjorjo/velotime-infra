@@ -113,7 +113,7 @@ jobs:
       - name: Modify Cluster Admin IP Filter
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify ${{ needs.resolve-environment.outputs.environment }}-cluster --kubernetes-api-allow-ip "$ADMIN_IP_FILTER"
+        run: upctl kubernetes modify ${{ needs.resolve-environment.outputs.environment }}-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
 
       - name: OpenTofu Init
         id: init
