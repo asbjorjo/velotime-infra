@@ -119,7 +119,7 @@ jobs:
         run: |
           admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" --arg runner_ipv6 "$RUNNER_IPV6" '
             if type != "array" then error("ADMIN_IP_FILTER must be a JSON array") else . end
-            | if index($runner_ip + "/32") == null then . + [$runner_ip + "/32"] else . end
+            | if index($runner_ip) == null then . + [$runner_ip] else . end
             | if ($runner_ipv6 | test(":")) then
                 if index($runner_ipv6 + "/128") == null then . + [$runner_ipv6 + "/128"] else . end
               else . end
