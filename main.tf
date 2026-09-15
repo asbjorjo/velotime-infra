@@ -1,9 +1,10 @@
 module "network" {
   source = "./network"
 
-  basename     = var.basename
-  zone         = var.zone
-  gateway_plan = var.network_gateway_plan
+  basename         = var.basename
+  zone             = var.zone
+  gateway_plan     = var.network_gateway_plan
+  ip_network_range = var.ip_network_range
 }
 
 module "cluster" {

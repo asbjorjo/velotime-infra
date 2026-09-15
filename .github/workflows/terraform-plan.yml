@@ -76,6 +76,7 @@ jobs:
       TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
       TF_VAR_zone: ${{ vars.ZONE }}
       TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
+      TF_VAR_ip_network_range: ${{ vars.NETWORK_IP_RANGE }}
       TF_VAR_cluster_plan: ${{ vars.CLUSTER_PLAN }}
       TF_VAR_cluster_node_plan: ${{ vars.CLUSTER_NODE_PLAN }}
       TF_VAR_cache_plan: ${{ vars.CACHE_PLAN }}
