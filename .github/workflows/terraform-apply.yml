@@ -111,6 +111,8 @@ jobs:
           sudo dpkg -i upcloud-cli_3.36.0_amd64.deb
 
       - name: Modify Cluster Admin IP Filter
+        env:
+          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
         run: upctl kubernetes modify ${{ needs.resolve-environment.outputs.environment }}-cluster --kubernetes-api-allow-ip $TF_VAR_admin_ip_filter
 
       - name: OpenTofu Init
