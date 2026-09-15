@@ -1,6 +1,6 @@
 # MySQL managed database with additional logical database: example2_db 
 resource "upcloud_managed_database_valkey" "instance" {
-  name  = "velotime-dev-cache"
+  name  = "${var.basename}-cache"
   plan  = var.plan
   zone  = var.zone
   title = "Instance cache"
@@ -12,7 +12,7 @@ resource "upcloud_managed_database_valkey" "instance" {
 
   network {
     family = "IPv4"
-    name   = "velotime-dev-net"
+    name   = "${var.basename}-net"
     type   = "private"
     uuid   = var.network
   }

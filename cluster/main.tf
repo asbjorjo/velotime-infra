@@ -35,7 +35,7 @@ resource "upcloud_kubernetes_node_group" "group" {
   // Each node in this group will have the following labels
   labels = {
     managedBy = "terraform"
-    project   = "velotime-dev"
+    project   = var.basename
   }
 
   // If uncommented, Eeach node in this group will have this taint

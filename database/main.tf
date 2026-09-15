@@ -1,6 +1,6 @@
 # MySQL managed database with additional logical database: example2_db 
 resource "upcloud_managed_database_postgresql" "instance" {
-  name  = "velotime-dev-pg"
+  name  = "${var.basename}-pg"
   plan  = var.plan
   zone  = var.zone
   title = "Instance database"
@@ -11,7 +11,7 @@ resource "upcloud_managed_database_postgresql" "instance" {
 
   network {
     family = "IPv4"
-    name   = "velotime-dev-net"
+    name   = "${var.basename}-net"
     type   = "private"
     uuid   = var.network
   }

@@ -8,11 +8,15 @@ Workflows use GitHub [deployment environments](https://docs.github.com/en/action
 
 Manual runs via `workflow_dispatch` allow selecting either the `development` or `production` environment.
 
+The selected GitHub Environment is used directly as the Terraform basename and state bucket name:
+
+- `development`: Terraform basename and state bucket `development`.
+- `production`: Terraform basename and state bucket `production`.
+
 ### Environment Configuration
 
 Configure the following variables in each GitHub Environment (`development` and `production`):
 
-- `BACKEND_BUCKET`: The UpCloud Object Storage bucket for state (e.g., `velotime-tfstate-dev` for development, `velotime-tfstate-prod` for production).
 - `BACKEND_REGION`: The region of the Object Storage bucket (e.g., `europe-1`).
 - `BACKEND_ENDPOINT`: The S3-compatible endpoint URL (e.g., `https://spfj4.upcloudobjects.com`).
 - `ADMIN_IP_FILTER`: Allowed IP addresses/CIDRs JSON/string list for admin access.
@@ -34,6 +38,6 @@ Configure these secrets (at the environment or repository level):
 - `DATABASE_USERNAME` / `DATABASE_PASSWORD`: Database credentials.
 - `CACHE_DB_USERNAME` / `CACHE_DB_PASSWORD`: Cache database credentials.
 
-The Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate the existing local state to Object Storage before the apply workflow runs.
+The derived Object Storage buckets must exist before their workflows run. Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate existing state, including state in legacy buckets such as `velotime-tfstate-dev`, to the derived bucket before the apply workflow runs.
 
 Pull requests from forks run formatting and backend-free validation only; state-backed plans run for trusted pull requests and manual workflow dispatches.

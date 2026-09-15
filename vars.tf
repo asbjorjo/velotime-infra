@@ -1,6 +1,5 @@
 variable "basename" {
-  default     = "velotime-dev"
-  description = "Instance base name."
+  description = "Instance base name derived from the deployment environment."
   type        = string
 }
 
