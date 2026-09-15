@@ -105,6 +105,16 @@ jobs:
           ' <<< "$ADMIN_IP_FILTER")"
           echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
 
+      - name: Setup UpCloud CLI
+        run: |
+          curl -Lo upcloud-cli_3.36.0_amd64.deb https://github.com/UpCloudLtd/upcloud-cli/releases/download/v3.36.0/upcloud-cli_3.36.0_amd64.deb
+          sudo dpkg -i upcloud-cli_3.36.0_amd64.deb
+
+      - name: Modify Cluster Admin IP Filter
+        env:
+          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
+        run: upctl kubernetes modify ${{ needs.resolve-environment.outputs.environment }}-cluster --kubernetes-api-allow-ip "$ADMIN_IP_FILTER"
+
       - name: OpenTofu Init
         id: init
         run: |
