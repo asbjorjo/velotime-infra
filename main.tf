@@ -11,7 +11,7 @@ module "cluster" {
   source = "./cluster"
 
   basename         = var.basename
-  store_kubeconfig = false
+  store_kubeconfig = true
   zone             = var.zone
   plan             = var.cluster_plan
   node_plan        = var.cluster_node_plan
