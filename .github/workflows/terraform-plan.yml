@@ -71,6 +71,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
+      TF_VAR_basename: ${{ needs.resolve-environment.outputs.environment }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
       TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
       TF_VAR_zone: ${{ vars.ZONE }}
@@ -97,7 +98,7 @@ jobs:
         id: init
         run: |
           tofu init -input=false \
-            -backend-config="bucket=${{ vars.BACKEND_BUCKET }}" \
+            -backend-config="bucket=${{ needs.resolve-environment.outputs.environment }}" \
             -backend-config="region=${{ vars.BACKEND_REGION }}" \
             -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
             -backend-config="skip_region_validation=true"

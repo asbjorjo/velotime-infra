@@ -1,5 +1,4 @@
-bucket   = "velotime-tfstate-dev"
-region   = "europe-1"
+region = "europe-1"
 endpoints = {
   s3 = "https://spfj4.upcloudobjects.com"
 }
