@@ -24,9 +24,13 @@ resource "upcloud_kubernetes_node_group" "group" {
   // Plan for each node; you can check available plans with upcloud CLI tool (`upctl server plans`) or by making a call to API (https://developers.upcloud.com/1.3/7-plans/)
   plan = var.node_plan
 
-  cloud_native_plan {
-    storage_tier = "standard"
-    storage_size = 20
+  dynamic "cloud_native_plan" {
+    for_each = startswith(var.node_plan, "CLOUDNATIVE") ? [1] : []
+
+    content {
+      storage_tier = "standard"
+      storage_size = 20
+    }
   }
 
   // With `anti_affinity` set to true, UKS will attempt to deploy nodes in this group to different compute hosts
