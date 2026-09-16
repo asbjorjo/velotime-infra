@@ -1,0 +1,5 @@
+region = "europe-1"
+endpoints = {
+  s3 = "https://spfj4.upcloudobjects.com"
+}
+skip_region_validation = true

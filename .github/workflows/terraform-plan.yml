@@ -1,45 +1,17 @@
-name: "OpenTofu Plan"
+name: "OpenTofu Format"
 
 on:
   pull_request:
     branches:
       - main
       - production
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Environment to plan against"
-        required: true
-        type: choice
-        options:
-          - development
-          - production
-        default: development
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
-  resolve-environment:
-    name: "Resolve Environment"
-    runs-on: ubuntu-latest
-    outputs:
-      environment: ${{ steps.set-env.outputs.environment }}
-    steps:
-      - name: Determine Target Environment
-        id: set-env
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.environment }}" ]; then
-            echo "environment=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.base_ref }}" = "production" ] || [ "${{ github.ref_name }}" = "production" ]; then
-            echo "environment=production" >> "$GITHUB_OUTPUT"
-          else
-            echo "environment=development" >> "$GITHUB_OUTPUT"
-          fi
-
-  validate:
-    name: "OpenTofu Validate"
+  format:
+    name: "OpenTofu Format Check"
     runs-on: ubuntu-latest
 
     steps:
@@ -52,130 +24,7 @@ jobs:
           tofu_version: "1.12.5"
 
       - name: OpenTofu Format Check
-        run: tofu fmt -check
+        run: tofu -chdir=terraform fmt -check
 
-      - name: OpenTofu Init Without Backend
-        run: tofu init -backend=false -input=false
-
-      - name: OpenTofu Validate
-        run: tofu validate -no-color
-
-  plan:
-    name: "OpenTofu Plan (${{ needs.resolve-environment.outputs.environment }})"
-    needs: [validate, resolve-environment]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    environment: ${{ needs.resolve-environment.outputs.environment }}
-
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
-      UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-      TF_VAR_basename: ${{ needs.resolve-environment.outputs.environment }}
-      TF_VAR_environment: ${{ needs.resolve-environment.outputs.environment }}
-      TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
-      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
-      TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
-      TF_VAR_zone: ${{ vars.ZONE }}
-      TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
-      TF_VAR_ip_network_range: ${{ vars.NETWORK_IP_RANGE }}
-      TF_VAR_cluster_plan: ${{ vars.CLUSTER_PLAN }}
-      TF_VAR_cluster_node_plan: ${{ vars.CLUSTER_NODE_PLAN }}
-      TF_VAR_cache_plan: ${{ vars.CACHE_PLAN }}
-      TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
-      TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
-      TF_VAR_database_plan: ${{ vars.DATABASE_PLAN }}
-      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
-      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v7
-
-      - name: Setup OpenTofu
-        uses: opentofu/setup-opentofu@v2
-        with:
-          tofu_version: "1.12.5"
-
-      - name: Discover Runner Public IP
-        id: runner-ip
-        run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
-            exit 1
-          fi
-          runner_ipv6="$(curl --fail --silent --show-error --retry 3 -6 https://api6.ipify.org || true)"
-          {
-            echo "runner_ip=$runner_ip"
-            echo "runner_ipv6=$runner_ipv6"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Add Runner IP To Admin Filter
-        env:
-          ADMIN_IP_FILTER: ${{ vars.ADMIN_IP_FILTER }}
-          RUNNER_IP: ${{ steps.runner-ip.outputs.runner_ip }}
-          RUNNER_IPV6: ${{ steps.runner-ip.outputs.runner_ipv6 }}
-        run: |
-          admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" --arg runner_ipv6 "$RUNNER_IPV6" '
-            if type != "array" then error("ADMIN_IP_FILTER must be a JSON array") else . end
-            | if index($runner_ip) == null then . + [$runner_ip] else . end
-            | if ($runner_ipv6 | test(":")) then
-                if index($runner_ipv6 + "/128") == null then . + [$runner_ipv6 + "/128"] else . end
-              else . end
-          ' <<< "$ADMIN_IP_FILTER")"
-          echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
-
-      - name: OpenTofu Init
-        id: init
-        run: |
-          tofu init -input=false \
-            -backend-config="bucket=${{ needs.resolve-environment.outputs.environment }}" \
-            -backend-config="region=${{ vars.BACKEND_REGION }}" \
-            -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
-            -backend-config="skip_region_validation=true"
-
-      - name: OpenTofu Validate
-        id: validate
-        run: tofu validate -no-color
-
-      - name: OpenTofu Plan
-        id: plan
-        run: tofu plan -no-color -input=false
-
-      - name: Comment PR with Plan
-        uses: actions/github-script@v9
-        if: github.event_name == 'pull_request'
-        env:
-          PLAN: "${{ steps.plan.outputs.stdout }}"
-          DEPLOY_ENV: "${{ needs.resolve-environment.outputs.environment }}"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const planOutput = process.env.PLAN || '';
-            const deployEnv = process.env.DEPLOY_ENV || 'development';
-            const truncatedPlan = planOutput.length > 60000
-              ? planOutput.substring(0, 60000) + '\n... (output truncated)'
-              : planOutput;
-
-            const output = `#### Environment: \`${deployEnv}\`
-            #### OpenTofu Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### OpenTofu Validation 🤖\`${{ steps.validate.outcome }}\`
-            #### OpenTofu Plan 📖\`${{ steps.plan.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`hcl
-            ${truncatedPlan}
-            \`\`\`
-
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            });
+      - name: OpenTofu Format Check (flux-bootstrap)
+        run: tofu -chdir=flux-bootstrap fmt -check
