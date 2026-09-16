@@ -118,7 +118,7 @@ jobs:
       - name: OpenTofu Init
         id: init
         run: |
-          tofu init -input=false \
+          tofu -chdir=terraform init -input=false \
             -backend-config="bucket=${{ needs.resolve-environment.outputs.environment }}" \
             -backend-config="region=${{ vars.BACKEND_REGION }}" \
             -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
@@ -126,4 +126,4 @@ jobs:
 
       - name: OpenTofu Apply
         id: apply
-        run: tofu apply -auto-approve -input=false
+        run: tofu -chdir=terraform apply -auto-approve -input=false

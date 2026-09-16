@@ -46,7 +46,7 @@ Pull requests from forks run formatting and backend-free validation only; state-
 
 ## Flux CD Bootstrap
 
-The root module bootstraps [Flux Operator](https://fluxcd.control-plane.io/operator/) on the
+The `terraform/` root module bootstraps [Flux Operator](https://fluxcd.control-plane.io/operator/) on the
 `cluster` module's Kubernetes cluster via the
 [`flux-operator-bootstrap`](https://github.com/controlplaneio-fluxcd/terraform-kubernetes-flux-operator-bootstrap)
 module. It reads the `FluxInstance` manifest from
