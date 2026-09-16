@@ -1,0 +1,16 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cilium
+  namespace: flux-system
+spec:
+  interval: 1h
+  path: ./clusters/development/cilium
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # gatewayAPI.enabled needs the CRDs installed first, or cilium-operator/agent will error on the missing types.
+  dependsOn:
+    - name: gateway-api-crds
+  timeout: 5m
