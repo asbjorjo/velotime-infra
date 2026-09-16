@@ -55,7 +55,18 @@ jobs:
       - name: Modify Cluster Admin IP Filter
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify ${{ inputs.environment }}-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
+        run: |
+          set -euo pipefail
+          mapfile -t allow_ips < <(upctl kubernetes show ${{ inputs.environment }}-cluster -o json | jq -r '.control_plane_ip_filter[]')
+          runner_ip="${{ steps.runner-ip.outputs.runner_ip }}"
+          if [[ ! " ${allow_ips[*]} " =~ " ${runner_ip} " ]]; then
+            allow_ips+=("$runner_ip")
+          fi
+          args=()
+          for ip in "${allow_ips[@]}"; do
+            args+=(--kubernetes-api-allow-ip "$ip")
+          done
+          upctl kubernetes modify ${{ inputs.environment }}-cluster "${args[@]}"
 
       - name: Wait for Cluster Admin IP Filter to Apply
         run: sleep 300
@@ -127,7 +138,18 @@ jobs:
       - name: Modify Cluster Admin IP Filter
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify ${{ inputs.environment }}-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
+        run: |
+          set -euo pipefail
+          mapfile -t allow_ips < <(upctl kubernetes show ${{ inputs.environment }}-cluster -o json | jq -r '.control_plane_ip_filter[]')
+          runner_ip="${{ steps.runner-ip.outputs.runner_ip }}"
+          if [[ ! " ${allow_ips[*]} " =~ " ${runner_ip} " ]]; then
+            allow_ips+=("$runner_ip")
+          fi
+          args=()
+          for ip in "${allow_ips[@]}"; do
+            args+=(--kubernetes-api-allow-ip "$ip")
+          done
+          upctl kubernetes modify ${{ inputs.environment }}-cluster "${args[@]}"
 
       - name: Wait for Cluster Admin IP Filter to Apply
         run: sleep 300
@@ -149,3 +171,17 @@ jobs:
       - name: OpenTofu Apply
         id: apply
         run: tofu -chdir=flux-bootstrap apply -auto-approve -input=false
+
+      - name: Remove Runner IP from Cluster Admin IP Filter
+        if: always()
+        env:
+          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
+        run: |
+          set -euo pipefail
+          runner_ip="${{ steps.runner-ip.outputs.runner_ip }}"
+          mapfile -t allow_ips < <(upctl kubernetes show ${{ inputs.environment }}-cluster -o json | jq -r --arg ip "$runner_ip" '.control_plane_ip_filter[] | select(. != $ip)')
+          args=()
+          for ip in "${allow_ips[@]}"; do
+            args+=(--kubernetes-api-allow-ip "$ip")
+          done
+          upctl kubernetes modify ${{ inputs.environment }}-cluster "${args[@]}"
