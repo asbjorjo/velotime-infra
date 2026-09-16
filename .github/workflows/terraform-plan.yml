@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - production
+    paths:
+      - terraform/**
 
 permissions:
   contents: read
