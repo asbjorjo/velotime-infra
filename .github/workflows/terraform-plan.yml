@@ -25,3 +25,6 @@ jobs:
 
       - name: OpenTofu Format Check
         run: tofu -chdir=terraform fmt -check
+
+      - name: OpenTofu Format Check (flux-bootstrap)
+        run: tofu -chdir=flux-bootstrap fmt -check

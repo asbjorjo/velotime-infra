@@ -22,10 +22,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_basename: development
-      TF_VAR_environment: development
-      TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
-      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
+      TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
       TF_VAR_zone: ${{ vars.ZONE }}
       TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
       TF_VAR_ip_network_range: ${{ vars.NETWORK_IP_RANGE }}
@@ -46,35 +44,6 @@ jobs:
         uses: opentofu/setup-opentofu@v2
         with:
           tofu_version: "1.12.5"
-
-      - name: Discover Runner Public IP
-        id: runner-ip
-        run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
-            exit 1
-          fi
-          runner_ipv6="$(curl --fail --silent --show-error --retry 3 -6 https://api6.ipify.org || true)"
-          {
-            echo "runner_ip=$runner_ip"
-            echo "runner_ipv6=$runner_ipv6"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Add Runner IP To Admin Filter
-        env:
-          ADMIN_IP_FILTER: ${{ vars.ADMIN_IP_FILTER }}
-          RUNNER_IP: ${{ steps.runner-ip.outputs.runner_ip }}
-          RUNNER_IPV6: ${{ steps.runner-ip.outputs.runner_ipv6 }}
-        run: |
-          admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" --arg runner_ipv6 "$RUNNER_IPV6" '
-            if type != "array" then error("ADMIN_IP_FILTER must be a JSON array") else . end
-            | if index($runner_ip) == null then . + [$runner_ip] else . end
-            | if ($runner_ipv6 | test(":")) then
-                if index($runner_ipv6 + "/128") == null then . + [$runner_ipv6 + "/128"] else . end
-              else . end
-          ' <<< "$ADMIN_IP_FILTER")"
-          echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
 
       - name: OpenTofu Init
         id: init
@@ -107,10 +76,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_basename: development
-      TF_VAR_environment: development
-      TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
-      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
+      TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
       TF_VAR_zone: ${{ vars.ZONE }}
       TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
       TF_VAR_ip_network_range: ${{ vars.NETWORK_IP_RANGE }}
@@ -131,45 +98,6 @@ jobs:
         uses: opentofu/setup-opentofu@v2
         with:
           tofu_version: "1.12.5"
-
-      - name: Discover Runner Public IP
-        id: runner-ip
-        run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
-            exit 1
-          fi
-          runner_ipv6="$(curl --fail --silent --show-error --retry 3 -6 https://api6.ipify.org || true)"
-          {
-            echo "runner_ip=$runner_ip"
-            echo "runner_ipv6=$runner_ipv6"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Add Runner IP To Admin Filter
-        env:
-          ADMIN_IP_FILTER: ${{ vars.ADMIN_IP_FILTER }}
-          RUNNER_IP: ${{ steps.runner-ip.outputs.runner_ip }}
-          RUNNER_IPV6: ${{ steps.runner-ip.outputs.runner_ipv6 }}
-        run: |
-          admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" --arg runner_ipv6 "$RUNNER_IPV6" '
-            if type != "array" then error("ADMIN_IP_FILTER must be a JSON array") else . end
-            | if index($runner_ip) == null then . + [$runner_ip] else . end
-            | if ($runner_ipv6 | test(":")) then
-                if index($runner_ipv6 + "/128") == null then . + [$runner_ipv6 + "/128"] else . end
-              else . end
-          ' <<< "$ADMIN_IP_FILTER")"
-          echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
-
-      - name: Setup UpCloud CLI
-        run: |
-          curl -Lo upcloud-cli_3.36.0_amd64.deb https://github.com/UpCloudLtd/upcloud-cli/releases/download/v3.36.0/upcloud-cli_3.36.0_amd64.deb
-          sudo dpkg -i upcloud-cli_3.36.0_amd64.deb
-
-      - name: Modify Cluster Admin IP Filter
-        env:
-          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify development-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
 
       - name: OpenTofu Init
         id: init
@@ -198,10 +126,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_basename: production
-      TF_VAR_environment: production
-      TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
-      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
+      TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
       TF_VAR_zone: ${{ vars.ZONE }}
       TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
       TF_VAR_ip_network_range: ${{ vars.NETWORK_IP_RANGE }}
@@ -222,35 +148,6 @@ jobs:
         uses: opentofu/setup-opentofu@v2
         with:
           tofu_version: "1.12.5"
-
-      - name: Discover Runner Public IP
-        id: runner-ip
-        run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
-            exit 1
-          fi
-          runner_ipv6="$(curl --fail --silent --show-error --retry 3 -6 https://api6.ipify.org || true)"
-          {
-            echo "runner_ip=$runner_ip"
-            echo "runner_ipv6=$runner_ipv6"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Add Runner IP To Admin Filter
-        env:
-          ADMIN_IP_FILTER: ${{ vars.ADMIN_IP_FILTER }}
-          RUNNER_IP: ${{ steps.runner-ip.outputs.runner_ip }}
-          RUNNER_IPV6: ${{ steps.runner-ip.outputs.runner_ipv6 }}
-        run: |
-          admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" --arg runner_ipv6 "$RUNNER_IPV6" '
-            if type != "array" then error("ADMIN_IP_FILTER must be a JSON array") else . end
-            | if index($runner_ip) == null then . + [$runner_ip] else . end
-            | if ($runner_ipv6 | test(":")) then
-                if index($runner_ipv6 + "/128") == null then . + [$runner_ipv6 + "/128"] else . end
-              else . end
-          ' <<< "$ADMIN_IP_FILTER")"
-          echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
 
       - name: OpenTofu Init
         id: init
@@ -293,10 +190,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_basename: production
-      TF_VAR_environment: production
-      TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
-      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
+      TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
       TF_VAR_zone: ${{ vars.ZONE }}
       TF_VAR_network_gateway_plan: ${{ vars.NETWORK_GATEWAY_PLAN }}
       TF_VAR_ip_network_range: ${{ vars.NETWORK_IP_RANGE }}
@@ -317,45 +212,6 @@ jobs:
         uses: opentofu/setup-opentofu@v2
         with:
           tofu_version: "1.12.5"
-
-      - name: Discover Runner Public IP
-        id: runner-ip
-        run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
-            exit 1
-          fi
-          runner_ipv6="$(curl --fail --silent --show-error --retry 3 -6 https://api6.ipify.org || true)"
-          {
-            echo "runner_ip=$runner_ip"
-            echo "runner_ipv6=$runner_ipv6"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Add Runner IP To Admin Filter
-        env:
-          ADMIN_IP_FILTER: ${{ vars.ADMIN_IP_FILTER }}
-          RUNNER_IP: ${{ steps.runner-ip.outputs.runner_ip }}
-          RUNNER_IPV6: ${{ steps.runner-ip.outputs.runner_ipv6 }}
-        run: |
-          admin_ip_filter="$(jq -ce --arg runner_ip "$RUNNER_IP" --arg runner_ipv6 "$RUNNER_IPV6" '
-            if type != "array" then error("ADMIN_IP_FILTER must be a JSON array") else . end
-            | if index($runner_ip) == null then . + [$runner_ip] else . end
-            | if ($runner_ipv6 | test(":")) then
-                if index($runner_ipv6 + "/128") == null then . + [$runner_ipv6 + "/128"] else . end
-              else . end
-          ' <<< "$ADMIN_IP_FILTER")"
-          echo "TF_VAR_admin_ip_filter=$admin_ip_filter" >> "$GITHUB_ENV"
-
-      - name: Setup UpCloud CLI
-        run: |
-          curl -Lo upcloud-cli_3.36.0_amd64.deb https://github.com/UpCloudLtd/upcloud-cli/releases/download/v3.36.0/upcloud-cli_3.36.0_amd64.deb
-          sudo dpkg -i upcloud-cli_3.36.0_amd64.deb
-
-      - name: Modify Cluster Admin IP Filter
-        env:
-          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify production-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
 
       - name: OpenTofu Init
         id: init
