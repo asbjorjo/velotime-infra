@@ -1,0 +1,9 @@
+basename             = "development"
+zone                 = "fi-hel1"
+network_gateway_plan = "essentials"
+ip_network_range     = "172.16.3.0/24"
+cluster_plan         = "dev-md"
+cluster_node_plan    = "STARTER-1xCPU-2GB"
+cluster_node_count   = 3
+cache_plan           = "1x1xCPU-1GB"
+database_plan        = "1x1xCPU-1GB-10GB"

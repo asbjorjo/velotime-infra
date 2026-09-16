@@ -24,7 +24,6 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-      TF_VAR_environment: ${{ inputs.environment }}
       TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
       TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
 
@@ -92,7 +91,7 @@ jobs:
 
       - name: OpenTofu Apply
         id: apply
-        run: tofu -chdir=flux-bootstrap apply -auto-approve -input=false
+        run: tofu -chdir=flux-bootstrap apply -auto-approve -input=false -var-file=environments/${{ inputs.environment }}.tfvars
 
       - name: Remove Runner IP from Cluster Admin IP Filter
         if: always()
