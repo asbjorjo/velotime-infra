@@ -40,6 +40,11 @@
 			"target": "/home/vscode/.local/state/gh",
 			"type": "volume"
 		},
+		{
+			"source": "${devcontainerId}-gh-vscode-config",
+			"target": "/home/vscode/.config/gh",
+			"type": "volume"
+		},
 		// Persist the shell history the image keeps in this directory.
 		{
 			"source": "${devcontainerId}-bash-history",
@@ -56,6 +61,7 @@
 	"postCreateCommand": {
 		"Fix Bash history permissions": "sudo chown -R vscode /home/vscode/.local/state/bash",
 		"Fix GH CLI cache permissions": "sudo chown -R vscode /home/vscode/.local/state/gh",
+		"Fix GH VSCode config permissions": "sudo chown -R vscode /home/vscode/.config/gh",
 		"Fix kubeconfig permissions": "sudo chown -R vscode /home/vscode/.kube",
 		"Install upctl": "curl -Lo upcloud-cli_3.36.0_amd64.deb https://github.com/UpCloudLtd/upcloud-cli/releases/download/v3.36.0/upcloud-cli_3.36.0_amd64.deb && sudo dpkg -i upcloud-cli_3.36.0_amd64.deb && rm upcloud-cli_3.36.0_amd64.deb"
 	}
