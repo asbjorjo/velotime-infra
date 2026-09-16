@@ -69,7 +69,7 @@ jobs:
           upctl kubernetes modify ${{ inputs.environment }}-cluster "${args[@]}"
 
       - name: Wait for Cluster Admin IP Filter to Apply
-        run: sleep 300
+        run: sleep 30
 
       # helm/kubernetes providers read this file directly; not managed by Terraform.
       - name: Fetch Cluster Kubeconfig
