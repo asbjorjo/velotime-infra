@@ -5,9 +5,9 @@
 Workflows use GitHub [deployment environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment):
 
 - Pull requests to `main` or `production` run `tofu -chdir=terraform fmt -check` and `tofu -chdir=flux-bootstrap fmt -check` only.
-- Pushes to `main` run the core `terraform/` deployment (development plan and apply, then production plan, then production apply after manual approval), followed by the `flux-bootstrap/` deployment (same plan/approval/apply chain), which starts once the core deployment succeeds.
+- Pushes to `main` run the core `terraform/` deployment (development plan and apply, then production plan, then production apply after manual approval). After each environment's core apply succeeds, that environment's `flux-bootstrap/` deployment runs plan and apply automatically.
 
-Both deployments use their own `production-approval` gate. Configure required reviewers on `production-approval` so production apply pauses after a successful production plan. Keep Terraform variables and secrets on the `development` and `production` environments; if production plan should run automatically, do not put required reviewers on the `production` environment itself.
+The core `terraform/` deployment uses the `production-approval` gate. Configure required reviewers on `production-approval` so production apply pauses after a successful production plan. The `flux-bootstrap/` deployment does not require a separate production approval; it runs after the already-approved production core apply succeeds. Keep Terraform variables and secrets on the `development` and `production` environments; if production plan should run automatically, do not put required reviewers on the `production` environment itself.
 
 Each deployment job's GitHub Environment is used directly as the Terraform basename and state bucket name:
 
@@ -72,5 +72,5 @@ workflow fetches at runtime with `upctl kubernetes config <basename>-cluster`, a
 allowing the runner's IP through the cluster's control-plane IP filter with
 `upctl kubernetes modify <basename>-cluster --kubernetes-api-allow-ip <runner-ip>`. The cluster
 name is assumed to follow the `<basename>-cluster` convention used by the `cluster` module. The
-`flux-bootstrap-apply.yml` workflow triggers via `workflow_run` after the `terraform-apply.yml`
-("OpenTofu Deploy") workflow completes successfully.
+`flux-bootstrap-apply.yml` workflow is called by the `terraform-apply.yml` ("OpenTofu Deploy")
+workflow after each environment's core `tofu apply` succeeds.

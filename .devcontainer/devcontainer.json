@@ -5,18 +5,17 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/base:trixie",
 	"features": {
-		"ghcr.io/devcontainers-extra/features/opentofu:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
 			"version": "1.35",
 			"minikube": "none",
 			"helm": "latest"
 		},
+		"ghcr.io/devcontainers-extra/features/actionlint:1": {},
+		"ghcr.io/devcontainers-extra/features/opentofu:1": {},
 		"ghcr.io/devcontainers-extra/features/yamllint:2": {}
 	},
 	
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
@@ -26,8 +25,32 @@
 				"ms-vscode.vscode-chat-customizations-evaluations"
 			]
 		}
+	},
+	"containerEnv": {
+		"DOCKER_HOST": "unix:///var/run/docker-host.sock",
+		// The cache volume and the workspace are different filesystems, so hardlinking would fail.
+		// See https://github.com/bare-devcontainer/templates/tree/main/src/uv#persistent-caches
+		"UV_LINK_MODE": "copy",
+		"HISTFILE": "/home/vscode/.local/state/bash/history"
+	},
+	"mounts": [
+		// Persist GH CLI state across rebuilds.
+		{
+			"source": "${devcontainerId}-gh-cli-state",
+			"target": "/home/vscode/.local/state/gh",
+			"type": "volume"
+		},
+		// Persist the shell history the image keeps in this directory.
+		{
+			"source": "${devcontainerId}-bash-history",
+			"target": "/home/vscode/.local/state/bash",
+			"type": "volume"
+		}
+	],
+	"postCreateCommand": {
+		"Fix Bash history permissions": "sudo chown -R vscode /home/vscode/.local/state/bash",
+		"Fix GH CLI cache permissions": "sudo chown -R vscode /home/vscode/.local/state/gh"
 	}
-	// "postCreateCommand": "bash install-upcloud-cli.sh"
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
