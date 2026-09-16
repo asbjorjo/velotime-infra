@@ -57,6 +57,9 @@ jobs:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
         run: upctl kubernetes modify ${{ inputs.environment }}-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
 
+      - name: Wait for Cluster Admin IP Filter to Apply
+        run: sleep 300
+
       # helm/kubernetes providers read this file directly; not managed by Terraform.
       - name: Fetch Cluster Kubeconfig
         env:
@@ -125,6 +128,9 @@ jobs:
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
         run: upctl kubernetes modify ${{ inputs.environment }}-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
+
+      - name: Wait for Cluster Admin IP Filter to Apply
+        run: sleep 300
 
       - name: Fetch Cluster Kubeconfig
         env:
