@@ -9,10 +9,12 @@ Workflows use GitHub [deployment environments](https://docs.github.com/en/action
 
 The core `terraform/` deployment uses the `production-approval` gate. Configure required reviewers on `production-approval` so production apply pauses after a successful production plan. The `flux-bootstrap/` deployment does not require a separate production approval; it runs after the already-approved production core apply succeeds. Keep Terraform variables and secrets on the `development` and `production` environments; if production plan should run automatically, do not put required reviewers on the `production` environment itself.
 
-Each deployment job's GitHub Environment is used directly as the Terraform basename and state bucket name:
+Each deployment job's GitHub Environment is used as the state bucket name and selects a committed variable file:
 
-- `development`: Terraform basename and state bucket `development`.
-- `production`: Terraform basename and state bucket `production`.
+- `development`: `terraform/environments/development.tfvars`, `flux-bootstrap/environments/development.tfvars`, and state bucket `development`.
+- `production`: `terraform/environments/production.tfvars`, `flux-bootstrap/environments/production.tfvars`, and state bucket `production`.
+
+The core Terraform files define the environment basename, zone, network, and resource plans. The Flux bootstrap files define the environment selected for Flux synchronization and the bootstrap revision. Add matching files in both locations before deploying a new environment.
 
 ### Environment Configuration
 
@@ -21,13 +23,7 @@ Configure the following variables in each Terraform GitHub Environment (`develop
 - `BACKEND_REGION`: The region of the Object Storage bucket (e.g., `europe-1`).
 - `BACKEND_ENDPOINT`: The S3-compatible endpoint URL (e.g., `https://spfj4.upcloudobjects.com`).
 - `ADMIN_IP_FILTER`: JSON array of allowed IP addresses/CIDRs for admin access, such as `["203.0.113.10/32"]`. Passed as-is to Terraform's `admin_ip_filter` variable, which sets the cluster's `control_plane_ip_filter`. The `flux-bootstrap` workflow separately opens the control-plane API to its own runner's IP for the duration of its run (see [Flux CD Bootstrap](#flux-cd-bootstrap)); it does not modify this variable's persisted value.
-- `ZONE` **(required)**: UpCloud zone used by the `network`, `cluster`, `cache`, and `database` modules (e.g., `fi-hel1`).
-- `NETWORK_GATEWAY_PLAN` *(optional)*: UpCloud plan for the NAT gateway. Defaults to `essentials`.
-- `NETWORK_IP_RANGE` *(optional)*: CIDR range for the cluster SDN network. Defaults to `172.16.2.0/24`.
-- `CLUSTER_PLAN` *(optional)*: UpCloud plan for the Kubernetes cluster control plane. Defaults to `dev-md`.
-- `CLUSTER_NODE_PLAN` *(optional)*: UpCloud plan for the Kubernetes worker nodes. Defaults to `CLOUDNATIVE-1xCPU-4GB`.
-- `CACHE_PLAN` *(optional)*: UpCloud plan for the cache instance. Defaults to `1x1xCPU-1GB`.
-- `DATABASE_PLAN` *(optional)*: UpCloud plan for the database instance. Defaults to `1x1xCPU-1GB-10GB`.
+- `FLUX_GIT_USERNAME`: Username for Flux's `flux-system` git pull secret. It is passed to Flux bootstrap at runtime.
 
 ### Secrets
 
@@ -59,10 +55,9 @@ own state (`velotime-infra/flux-bootstrap.tfstate` in the same environment bucke
 `terraform/` deployment, via the
 [`flux-operator-bootstrap`](https://github.com/controlplaneio-fluxcd/terraform-kubernetes-flux-operator-bootstrap)
 module. It reads the `FluxInstance` manifest from
-`clusters/<environment>/flux-system/flux-instance.yaml`, where `<environment>` is the
-GitHub Actions deployment environment (`development` or `production`) passed in
-automatically as `TF_VAR_environment` — a matching manifest must exist for each environment
-before that environment's plan or apply can succeed. The `flux-system` git pull secret used by
+`clusters/<environment>/flux-system/flux-instance.yaml`, where `<environment>` is loaded from
+the matching `flux-bootstrap/environments/<environment>.tfvars` file — a matching manifest must
+exist for each environment before that environment's plan or apply can succeed. The `flux-system` git pull secret used by
 `sync.pullSecret` is provisioned from the `FLUX_GIT_TOKEN` secret above and reconciled on
 every apply.
 

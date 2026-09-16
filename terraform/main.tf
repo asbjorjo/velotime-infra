@@ -16,7 +16,7 @@ module "cluster" {
   plan             = var.cluster_plan
   node_plan        = var.cluster_node_plan
 
-  nodes = 1
+  nodes = var.cluster_node_count
 
   network = module.network.network_id
   gateway = module.network.gateway_id

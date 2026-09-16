@@ -32,6 +32,12 @@ variable "cluster_node_plan" {
   type        = string
 }
 
+variable "cluster_node_count" {
+  default     = 3
+  description = "Number of Kubernetes worker nodes."
+  type        = number
+}
+
 variable "cache_plan" {
   default     = "1x1xCPU-1GB"
   description = "UpCloud plan for the cache instance."
