@@ -112,6 +112,14 @@ jobs:
         id: apply
         run: tofu -chdir=terraform apply -auto-approve -input=false
 
+  development-flux-bootstrap:
+    name: "Flux Bootstrap Deploy (development)"
+    needs: development-apply
+    uses: ./.github/workflows/flux-bootstrap-apply.yml
+    with:
+      environment: development
+    secrets: inherit
+
   production-plan:
     name: "OpenTofu Plan (production)"
     needs: development-apply
@@ -225,3 +233,11 @@ jobs:
       - name: OpenTofu Apply
         id: apply
         run: tofu -chdir=terraform apply -auto-approve -input=false
+
+  production-flux-bootstrap:
+    name: "Flux Bootstrap Deploy (production)"
+    needs: production-apply
+    uses: ./.github/workflows/flux-bootstrap-apply.yml
+    with:
+      environment: production
+    secrets: inherit

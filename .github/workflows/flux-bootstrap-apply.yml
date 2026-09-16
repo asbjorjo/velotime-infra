@@ -1,36 +1,36 @@
 name: "Flux Bootstrap Deploy"
 
 on:
-  workflow_run:
-    workflows: ["OpenTofu Deploy"]
-    types: [completed]
+  workflow_call:
+    inputs:
+      environment:
+        description: "Deployment environment to bootstrap with Flux."
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
-  development-plan:
-    name: "Flux Bootstrap Plan (development)"
-    if: github.event.workflow_run.conclusion == 'success'
+  plan:
+    name: "Flux Bootstrap Plan (${{ inputs.environment }})"
     runs-on: ubuntu-latest
-    environment: development
+    environment: ${{ inputs.environment }}
     concurrency:
-      group: flux-bootstrap-plan-development
+      group: flux-bootstrap-plan-${{ inputs.environment }}
       cancel-in-progress: false
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-      TF_VAR_environment: development
+      TF_VAR_environment: ${{ inputs.environment }}
       TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
       TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v2
@@ -55,19 +55,19 @@ jobs:
       - name: Modify Cluster Admin IP Filter
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify development-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
+        run: upctl kubernetes modify ${{ inputs.environment }}-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
 
       # helm/kubernetes providers read this file directly; not managed by Terraform.
       - name: Fetch Cluster Kubeconfig
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes config development-cluster --output yaml --write "$GITHUB_WORKSPACE/flux-bootstrap/kubeconfig.yml"
+        run: upctl kubernetes config ${{ inputs.environment }}-cluster --output yaml --write "$GITHUB_WORKSPACE/flux-bootstrap/kubeconfig.yml"
 
       - name: OpenTofu Init
         id: init
         run: |
           tofu -chdir=flux-bootstrap init -input=false \
-            -backend-config="bucket=development" \
+            -backend-config="bucket=${{ inputs.environment }}" \
             -backend-config="region=${{ vars.BACKEND_REGION }}" \
             -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
             -backend-config="skip_region_validation=true"
@@ -80,28 +80,26 @@ jobs:
         id: plan
         run: tofu -chdir=flux-bootstrap plan -no-color -input=false
 
-  development-apply:
-    name: "Flux Bootstrap Apply (development)"
-    needs: development-plan
+  apply:
+    name: "Flux Bootstrap Apply (${{ inputs.environment }})"
+    needs: plan
     runs-on: ubuntu-latest
-    environment: development
+    environment: ${{ inputs.environment }}
     concurrency:
-      group: flux-bootstrap-apply-development
+      group: flux-bootstrap-apply-${{ inputs.environment }}
       cancel-in-progress: false
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-      TF_VAR_environment: development
+      TF_VAR_environment: ${{ inputs.environment }}
       TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
       TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v2
@@ -126,164 +124,18 @@ jobs:
       - name: Modify Cluster Admin IP Filter
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify development-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
+        run: upctl kubernetes modify ${{ inputs.environment }}-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
 
       - name: Fetch Cluster Kubeconfig
         env:
           UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes config development-cluster --output yaml --write "$GITHUB_WORKSPACE/flux-bootstrap/kubeconfig.yml"
+        run: upctl kubernetes config ${{ inputs.environment }}-cluster --output yaml --write "$GITHUB_WORKSPACE/flux-bootstrap/kubeconfig.yml"
 
       - name: OpenTofu Init
         id: init
         run: |
           tofu -chdir=flux-bootstrap init -input=false \
-            -backend-config="bucket=development" \
-            -backend-config="region=${{ vars.BACKEND_REGION }}" \
-            -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
-            -backend-config="skip_region_validation=true"
-
-      - name: OpenTofu Apply
-        id: apply
-        run: tofu -chdir=flux-bootstrap apply -auto-approve -input=false
-
-  production-plan:
-    name: "Flux Bootstrap Plan (production)"
-    needs: development-apply
-    runs-on: ubuntu-latest
-    environment: production
-    concurrency:
-      group: flux-bootstrap-plan-production
-      cancel-in-progress: false
-
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
-      UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-      TF_VAR_environment: production
-      TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
-      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
-      - name: Setup OpenTofu
-        uses: opentofu/setup-opentofu@v2
-        with:
-          tofu_version: "1.12.5"
-
-      - name: Setup UpCloud CLI
-        run: |
-          curl -Lo upcloud-cli_3.36.0_amd64.deb https://github.com/UpCloudLtd/upcloud-cli/releases/download/v3.36.0/upcloud-cli_3.36.0_amd64.deb
-          sudo dpkg -i upcloud-cli_3.36.0_amd64.deb
-
-      - name: Discover Runner Public IP
-        id: runner-ip
-        run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
-            exit 1
-          fi
-          echo "runner_ip=$runner_ip" >> "$GITHUB_OUTPUT"
-
-      - name: Modify Cluster Admin IP Filter
-        env:
-          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify production-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
-
-      - name: Fetch Cluster Kubeconfig
-        env:
-          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes config production-cluster --output yaml --write "$GITHUB_WORKSPACE/flux-bootstrap/kubeconfig.yml"
-
-      - name: OpenTofu Init
-        id: init
-        run: |
-          tofu -chdir=flux-bootstrap init -input=false \
-            -backend-config="bucket=production" \
-            -backend-config="region=${{ vars.BACKEND_REGION }}" \
-            -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
-            -backend-config="skip_region_validation=true"
-
-      - name: OpenTofu Validate
-        id: validate
-        run: tofu -chdir=flux-bootstrap validate -no-color
-
-      - name: OpenTofu Plan
-        id: plan
-        run: tofu -chdir=flux-bootstrap plan -no-color -input=false
-
-  production-approval:
-    name: "Approve Flux Bootstrap Production Apply"
-    needs: production-plan
-    runs-on: ubuntu-latest
-    environment: production-approval
-
-    steps:
-      - name: Approval Received
-        run: echo "Flux bootstrap production apply approved."
-
-  production-apply:
-    name: "Flux Bootstrap Apply (production)"
-    needs: production-approval
-    runs-on: ubuntu-latest
-    environment: production
-    concurrency:
-      group: flux-bootstrap-apply-production
-      cancel-in-progress: false
-
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.UPCLOUD_S3_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.UPCLOUD_S3_SECRET_ACCESS_KEY }}
-      UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-      TF_VAR_environment: production
-      TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
-      TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
-      - name: Setup OpenTofu
-        uses: opentofu/setup-opentofu@v2
-        with:
-          tofu_version: "1.12.5"
-
-      - name: Setup UpCloud CLI
-        run: |
-          curl -Lo upcloud-cli_3.36.0_amd64.deb https://github.com/UpCloudLtd/upcloud-cli/releases/download/v3.36.0/upcloud-cli_3.36.0_amd64.deb
-          sudo dpkg -i upcloud-cli_3.36.0_amd64.deb
-
-      - name: Discover Runner Public IP
-        id: runner-ip
-        run: |
-          runner_ip="$(curl --fail --silent --show-error --retry 3 https://api.ipify.org)"
-          if [[ ! "$runner_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
-            echo "The runner public IP is not a valid IPv4 address: $runner_ip" >&2
-            exit 1
-          fi
-          echo "runner_ip=$runner_ip" >> "$GITHUB_OUTPUT"
-
-      - name: Modify Cluster Admin IP Filter
-        env:
-          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes modify production-cluster --kubernetes-api-allow-ip ${{ steps.runner-ip.outputs.runner_ip }}
-
-      - name: Fetch Cluster Kubeconfig
-        env:
-          UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
-        run: upctl kubernetes config production-cluster --output yaml --write "$GITHUB_WORKSPACE/flux-bootstrap/kubeconfig.yml"
-
-      - name: OpenTofu Init
-        id: init
-        run: |
-          tofu -chdir=flux-bootstrap init -input=false \
-            -backend-config="bucket=production" \
+            -backend-config="bucket=${{ inputs.environment }}" \
             -backend-config="region=${{ vars.BACKEND_REGION }}" \
             -backend-config="endpoints={s3=\"${{ vars.BACKEND_ENDPOINT }}\"}" \
             -backend-config="skip_region_validation=true"
