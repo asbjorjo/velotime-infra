@@ -1,5 +1,10 @@
 {
   "features": {
+    "ghcr.io/audacioustux/devcontainers/cilium:1": {
+      "version": "1.0.0",
+      "resolved": "ghcr.io/audacioustux/devcontainers/cilium@sha256:d9a1687a48bd8a23f02778d3ff533cf53d02c5e13247b1b9944962e798edd018",
+      "integrity": "sha256:d9a1687a48bd8a23f02778d3ff533cf53d02c5e13247b1b9944962e798edd018"
+    },
     "ghcr.io/devcontainers-extra/features/actionlint:1": {
       "version": "1.0.7",
       "resolved": "ghcr.io/devcontainers-extra/features/actionlint@sha256:6a3dde90cb31e366892f8f2ebb766d73d7293d6e79ed9ac4041014d31599fdda",
