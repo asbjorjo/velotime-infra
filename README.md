@@ -3,19 +3,20 @@
 ## GitHub Actions
 
 Workflows use GitHub [deployment environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment):
-- `development`: Runs on pushes to the `main` branch or PRs targeting `main`.
-- `production`: Runs on pushes to the `production` branch or PRs targeting `production`.
 
-Manual runs via `workflow_dispatch` allow selecting either the `development` or `production` environment.
+- Pull requests to `main` or `production` run `tofu -chdir=terraform fmt -check` only.
+- Pushes to `main` run development plan and apply, then production plan, then production apply after manual approval.
 
-The selected GitHub Environment is used directly as the Terraform basename and state bucket name:
+The production approval gate uses a separate GitHub Environment named `production-approval`. Configure required reviewers on `production-approval` so production apply pauses after a successful production plan. Keep Terraform variables and secrets on the `development` and `production` environments; if production plan should run automatically, do not put required reviewers on the `production` environment itself.
+
+Each deployment job's GitHub Environment is used directly as the Terraform basename and state bucket name:
 
 - `development`: Terraform basename and state bucket `development`.
 - `production`: Terraform basename and state bucket `production`.
 
 ### Environment Configuration
 
-Configure the following variables in each GitHub Environment (`development` and `production`):
+Configure the following variables in each Terraform GitHub Environment (`development` and `production`):
 
 - `BACKEND_REGION`: The region of the Object Storage bucket (e.g., `europe-1`).
 - `BACKEND_ENDPOINT`: The S3-compatible endpoint URL (e.g., `https://spfj4.upcloudobjects.com`).
@@ -42,7 +43,9 @@ Configure these secrets (at the environment or repository level):
 
 The derived Object Storage buckets must exist before their workflows run. Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate existing state, including state in legacy buckets such as `velotime-tfstate-dev`, to the derived bucket before the apply workflow runs.
 
-Pull requests from forks run formatting and backend-free validation only; state-backed plans run for trusted pull requests and manual workflow dispatches.
+Pull requests from forks run the same format check as other pull requests and do not receive state-backed plans.
+
+Configure the `production-approval` GitHub Environment with required reviewers only. It does not need Terraform variables or secrets.
 
 ## Flux CD Bootstrap
 
@@ -51,8 +54,8 @@ The `terraform/` root module bootstraps [Flux Operator](https://fluxcd.control-p
 [`flux-operator-bootstrap`](https://github.com/controlplaneio-fluxcd/terraform-kubernetes-flux-operator-bootstrap)
 module. It reads the `FluxInstance` manifest from
 `clusters/<environment>/flux-system/flux-instance.yaml`, where `<environment>` is the
-resolved GitHub Actions deployment environment (`development` or `production`) passed in
+GitHub Actions deployment environment (`development` or `production`) passed in
 automatically as `TF_VAR_environment` — a matching manifest must exist for each environment
-before that environment's apply can succeed. The `flux-system` git pull secret used by
+before that environment's plan or apply can succeed. The `flux-system` git pull secret used by
 `sync.pullSecret` is provisioned from the `FLUX_GIT_TOKEN` secret above and reconciled on
 every apply.
