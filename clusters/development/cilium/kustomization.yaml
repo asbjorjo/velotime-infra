@@ -3,8 +3,12 @@ kind: Kustomization
 resources:
   - helmrepository.yaml
   - helmrelease.yaml
-# patches:
-#   - path: patch-gateway-api.yaml
-#     target:
-#       kind: HelmRelease
-#       name: cilium
+patches:
+  - path: patch-upgrade-compat.yaml
+    target:
+      kind: HelmRelease
+      name: cilium
+  - path: patch-gateway-api.yaml
+    target:
+      kind: HelmRelease
+      name: cilium
