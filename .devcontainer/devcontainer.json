@@ -14,7 +14,8 @@
 		"ghcr.io/devcontainers-extra/features/actionlint:1": {},
 		"ghcr.io/devcontainers-extra/features/opentofu:1": {},
 		"ghcr.io/devcontainers-extra/features/yamllint:2": {},
-		"ghcr.io/audacioustux/devcontainers/cilium:1": {}
+		"ghcr.io/audacioustux/devcontainers/cilium:1": {},
+		"ghcr.io/jsburckhardt/devcontainer-features/flux:1": {}
 	},
 	
 	
