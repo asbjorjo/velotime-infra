@@ -7,4 +7,3 @@ resources:
   - cert-manager-kustomization.yaml
   - cert-manager-issuer-kustomization.yaml
   - gateway-kustomization.yaml
-  - gateway-https-listener-kustomization.yaml
