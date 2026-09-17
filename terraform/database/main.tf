@@ -4,6 +4,7 @@ resource "upcloud_managed_database_postgresql" "instance" {
   plan  = var.plan
   zone  = var.zone
   title = "Instance database"
+  termination_protection = var.termination_protection
 
   labels = {
     managedBy = "terraform"

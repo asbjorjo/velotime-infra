@@ -4,6 +4,7 @@ resource "upcloud_managed_database_valkey" "instance" {
   plan  = var.plan
   zone  = var.zone
   title = "Instance cache"
+  termination_protection = var.termination_protection
 
   labels = {
     managedBy = "terraform"
