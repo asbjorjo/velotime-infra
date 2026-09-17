@@ -12,4 +12,14 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-    # https listener intentionally omitted until the gateway-tls secret exists; re-add it referencing that secret once cert-manager has issued it.
+    - name: port-443
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: gateway-tls
+      allowedRoutes:
+        namespaces:
+          from: All
