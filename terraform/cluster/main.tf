@@ -7,7 +7,6 @@ resource "upcloud_kubernetes_cluster" "instance" {
   depends_on              = [var.gateway]
   control_plane_ip_filter = var.admin_ip_filter
   plan                    = var.plan
-  termination_protection = var.termination_protection
 
   labels = {
     managedBy = "terraform"
