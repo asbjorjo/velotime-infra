@@ -30,5 +30,4 @@ spec:
       enabled: true
     # Required for the ClusterIssuer's gatewayHTTPRoute ACME solver to reconcile Gateway API types.
     config:
-      gatewayAPI:
-        enabled: true
+      enableGatewayAPI: true
