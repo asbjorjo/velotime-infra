@@ -5,6 +5,11 @@ resource "upcloud_managed_database_postgresql" "instance" {
   zone  = var.zone
   title = "Instance database"
 
+  labels = {
+    managedBy = "terraform"
+    project   = var.basename
+  }
+
   properties {
     version = "18"
   }

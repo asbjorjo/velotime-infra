@@ -5,6 +5,11 @@ resource "upcloud_managed_database_valkey" "instance" {
   zone  = var.zone
   title = "Instance cache"
 
+  labels = {
+    managedBy = "terraform"
+    project   = var.basename
+  }
+
   properties {
     public_access = false
     ip_filter     = var.admin_ip_filter

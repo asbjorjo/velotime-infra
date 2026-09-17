@@ -1,12 +1,22 @@
 # Create a router for your network
 resource "upcloud_router" "instance" {
   name = "${var.basename}-router"
+
+  labels = {
+    managedBy = "terraform"
+    project   = var.basename
+  }
 }
 
 # Create a network for your cluster
 resource "upcloud_network" "instance" {
   name = "${var.basename}-net"
   zone = var.zone
+
+  labels = {
+    managedBy = "terraform"
+    project   = var.basename
+  }
 
   ip_network {
     address            = var.ip_network_range
@@ -24,6 +34,11 @@ resource "upcloud_gateway" "instance" {
   zone     = var.zone
   features = ["nat"]
   plan     = var.gateway_plan
+
+  labels = {
+    managedBy = "terraform"
+    project   = var.basename
+  }
 
   router {
     id = upcloud_router.instance.id
