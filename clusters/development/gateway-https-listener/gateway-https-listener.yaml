@@ -6,7 +6,7 @@ metadata:
 spec:
   # Only the https listener; the http listener and rest of the Gateway are owned by the "gateway" Kustomization.
   listeners:
-    - name: https
+    - name: port-443
       port: 443
       protocol: HTTPS
       tls:
