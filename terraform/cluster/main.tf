@@ -7,6 +7,11 @@ resource "upcloud_kubernetes_cluster" "instance" {
   depends_on              = [var.gateway]
   control_plane_ip_filter = var.admin_ip_filter
   plan                    = var.plan
+
+  labels = {
+    managedBy = "terraform"
+    project   = var.basename
+  }
 }
 
 # Create a node group for your cluster
