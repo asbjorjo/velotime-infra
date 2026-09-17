@@ -12,5 +12,5 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: gateway-api-crds
+    - name: cilium
   timeout: 5m
