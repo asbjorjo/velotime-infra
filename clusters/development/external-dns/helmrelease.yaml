@@ -1,0 +1,47 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: flux-system
+spec:
+  interval: 1h
+  releaseName: external-dns
+  targetNamespace: external-dns
+  storageNamespace: external-dns
+  timeout: 5m
+  chart:
+    spec:
+      chart: external-dns
+      version: "1.21.1"
+      sourceRef:
+        kind: HelmRepository
+        name: external-dns
+        namespace: flux-system
+      interval: 1h
+  install:
+    remediation:
+      retries: 0
+  upgrade:
+    remediation:
+      retries: 0
+  values:
+    policy: sync
+    registry: txt
+    txtOwnerId: development
+    domainFilters:
+      - veloti.me
+    sources:
+      - gateway-httproute
+    provider:
+      name: azure
+    extraArgs:
+      azure-resource-group: velotime-rg-noe
+    # azure.json is provisioned by flux-bootstrap's Terraform (kubernetes_secret_v1.external_dns_azure_config), not by this chart or Flux.
+    extraVolumes:
+      - name: azure-config-file
+        secret:
+          secretName: external-dns-azure-config
+    extraVolumeMounts:
+      - name: azure-config-file
+        mountPath: /etc/kubernetes
+        readOnly: true
