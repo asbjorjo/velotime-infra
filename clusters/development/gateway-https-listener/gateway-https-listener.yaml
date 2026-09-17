@@ -3,6 +3,11 @@ kind: Gateway
 metadata:
   name: gateway
   namespace: gateway-system
+  annotations:
+    # Both this and the "gateway" Kustomization use the shared "kustomize-controller" field
+    # manager; without "merge", this partial apply would remove fields (e.g. gatewayClassName,
+    # the port-80 listener) that this manifest doesn't declare but the other Kustomization owns.
+    kustomize.toolkit.fluxcd.io/ssa: merge
 spec:
   # Only the https listener; the http listener and rest of the Gateway are owned by the "gateway" Kustomization.
   listeners:
