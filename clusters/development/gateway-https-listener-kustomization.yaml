@@ -1,0 +1,17 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gateway-https-listener
+  namespace: flux-system
+spec:
+  interval: 1h
+  path: ./clusters/development/gateway-https-listener
+  # Never delete the shared Gateway object; this Kustomization only ever contributes the https listener field.
+  prune: false
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  # "gateway" only reports Ready once its Certificate is Ready, i.e. once the gateway-tls secret exists.
+  dependsOn:
+    - name: gateway
+  timeout: 5m

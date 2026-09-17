@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-tls
+  namespace: gateway-system
+spec:
+  secretName: gateway-tls
+  # TODO: replace with the real hostname once DNS points at this Gateway's address.
+  dnsNames:
+    - development.veloti.me
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
