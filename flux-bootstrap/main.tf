@@ -4,6 +4,8 @@ module "flux_operator_bootstrap" {
 
   revision = var.flux_bootstrap_revision
 
+  depends_on = [resource.kubernetes_namespace_v1.external_dns, resource.kubernetes_secret_v1.external_dns_azure_config]
+
   gitops_resources = {
     instance_yaml = file("${path.module}/../clusters/${var.environment}/flux-system/flux-instance.yaml")
   }
@@ -33,8 +35,6 @@ locals {
 # external-dns Kustomization reconciles, per the module's namespace hand-off behavior.
 resource "kubernetes_namespace_v1" "external_dns" {
   count = local.external_dns_azure_enabled ? 1 : 0
-
-  depends_on = [module.flux_operator_bootstrap]
 
   metadata {
     name = "external-dns"
