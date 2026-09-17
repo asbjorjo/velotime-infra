@@ -25,6 +25,12 @@ Configure the following variables in each Terraform GitHub Environment (`develop
 - `ADMIN_IP_FILTER`: JSON array of allowed IP addresses/CIDRs for admin access, such as `["203.0.113.10/32"]`. Passed as-is to Terraform's `admin_ip_filter` variable, which sets the cluster's `control_plane_ip_filter`. The `flux-bootstrap` workflow separately opens the control-plane API to its own runner's IP for the duration of its run (see [Flux CD Bootstrap](#flux-cd-bootstrap)); it does not modify this variable's persisted value.
 - `FLUX_GIT_USERNAME`: Username for Flux's `flux-system` git pull secret. It is passed to Flux bootstrap at runtime.
 
+The `flux-bootstrap` workflow additionally accepts these variables, non-sensitive identifiers for the `external-dns` Azure DNS provider (optional per environment; when `AZURE_TENANT_ID` is unset, `flux-bootstrap` skips creating the `external-dns-azure-config` Secret):
+
+- `AZURE_TENANT_ID`: Azure AD tenant ID for the external-dns service principal.
+- `AZURE_SUBSCRIPTION_ID`: Azure subscription ID containing the Azure DNS zone.
+- `AZURE_CLIENT_ID`: Client (application) ID of the external-dns Azure service principal.
+
 ### Secrets
 
 Configure these secrets (at the environment or repository level):
@@ -40,6 +46,7 @@ The `flux-bootstrap` workflow additionally requires:
 
 - `FLUX_GIT_TOKEN`: GitHub PAT with read access to this repo, used as the Flux `flux-system` git pull secret.
 - `UPCLOUD_TOKEN`, `UPCLOUD_S3_ACCESS_KEY_ID`, `UPCLOUD_S3_SECRET_ACCESS_KEY` (shared with the core deployment above).
+- `AZURE_CLIENT_SECRET`: Client secret of the Azure service principal identified by the `AZURE_*` variables above. The service principal needs `Reader` on the resource group and `Contributor`/`DNS Zone Contributor` on the DNS zone (see the `azure_dns_resource_group` variable in `flux-bootstrap/environments/<environment>.tfvars`).
 
 The derived Object Storage buckets must exist before their workflows run. Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate existing state, including state in legacy buckets such as `velotime-tfstate-dev`, to the derived bucket before the apply workflow runs.
 

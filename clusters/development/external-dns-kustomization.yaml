@@ -1,13 +1,12 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: cert-manager
+  name: external-dns
   namespace: flux-system
 spec:
   interval: 1h
-  path: ./clusters/development/cert-manager
+  path: ./clusters/development/external-dns
   prune: true
-  wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system

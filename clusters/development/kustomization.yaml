@@ -7,3 +7,4 @@ resources:
   - cert-manager-kustomization.yaml
   - cert-manager-issuer-kustomization.yaml
   - gateway-kustomization.yaml
+  - external-dns-kustomization.yaml
