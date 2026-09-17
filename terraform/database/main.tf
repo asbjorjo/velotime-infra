@@ -1,9 +1,9 @@
 # MySQL managed database with additional logical database: example2_db 
 resource "upcloud_managed_database_postgresql" "instance" {
-  name  = "${var.basename}-pg"
-  plan  = var.plan
-  zone  = var.zone
-  title = "Instance database"
+  name                   = "${var.basename}-pg"
+  plan                   = var.plan
+  zone                   = var.zone
+  title                  = "Instance database"
   termination_protection = var.termination_protection
 
   labels = {

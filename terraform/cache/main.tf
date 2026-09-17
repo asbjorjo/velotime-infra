@@ -1,9 +1,9 @@
 # MySQL managed database with additional logical database: example2_db 
 resource "upcloud_managed_database_valkey" "instance" {
-  name  = "${var.basename}-cache"
-  plan  = var.plan
-  zone  = var.zone
-  title = "Instance cache"
+  name                   = "${var.basename}-cache"
+  plan                   = var.plan
+  zone                   = var.zone
+  title                  = "Instance cache"
   termination_protection = var.termination_protection
 
   labels = {
