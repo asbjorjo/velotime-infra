@@ -8,3 +8,7 @@ resources:
   - cert-manager-issuer-kustomization.yaml
   - gateway-kustomization.yaml
   - external-dns-kustomization.yaml
+  - external-secrets-kustomization.yaml
+  - external-secrets-crds-kustomization.yaml
+  - external-secrets-operator-kustomization.yaml
+  - external-secrets-crs-kustomization.yaml
