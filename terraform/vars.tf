@@ -85,3 +85,9 @@ variable "database_password" {
   type        = string
   sensitive   = true
 }
+
+variable "termination_protection" {
+  description = "Protect resources from deletion and shutdown"
+  type        = bool
+  default     = false
+}
