@@ -4,3 +4,7 @@ resources:
   - flux-system/flux-instance.yaml
   - gateway-api-crds.yaml
   - cilium-kustomization.yaml
+  - cert-manager-kustomization.yaml
+  - cert-manager-issuer-kustomization.yaml
+  - gateway-kustomization.yaml
+  - gateway-https-listener-kustomization.yaml
