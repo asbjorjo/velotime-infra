@@ -10,7 +10,6 @@ spec:
         {
           "plan": "essentials",
           "frontends": [
-            {"name": "http", "mode": "tcp", "port": 80},
-            {"name": "https", "mode": "tcp", "port": 443}
+            {"name": "http", "mode": "tcp", "port": 80}
           ]
         }
