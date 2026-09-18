@@ -8,9 +8,9 @@ database:
   host: postgres-service
   port: 5432
   user: velotime
-  password: velotime
+  password: ""
 secrets:
-  MessageBus: "Endpoint=sb://velotime.servicebus.windows.net/;SharedAccessKeyName=asbjj-testing;SharedAccessKey=jmBsVsvCrc3WNQYL1i44P0ALpW4exlI6q\u002BASbHxXqBo="
+  MessageBus: ""
 image:
   tag: 3.0.0.alpha.11
   pullPolicy: Always
