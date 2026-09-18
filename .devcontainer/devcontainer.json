@@ -4,6 +4,7 @@
 	"name": "Debian",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/base:trixie",
+	"runArgs": ["--env-file", "${localWorkspaceFolder}/.env"],
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
@@ -12,13 +13,14 @@
 			"helm": "latest"
 		},
 		"ghcr.io/devcontainers-extra/features/actionlint:1": {},
-		"ghcr.io/devcontainers-extra/features/opentofu:1": {},
+		"ghcr.io/devcontainers-extra/features/opentofu:1": {
+			"version": "1.12.5"
+		},
 		"ghcr.io/devcontainers-extra/features/yamllint:2": {},
 		"ghcr.io/audacioustux/devcontainers/cilium:1": {},
 		"ghcr.io/jsburckhardt/devcontainer-features/flux:1": {}
 	},
-	
-	
+
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
