@@ -1,0 +1,13 @@
+{{- define "velotime.migration" -}}
+{{- if .Values.migration.enabled -}}
+initContainers:
+- name: {{ .Chart.Name }}-migration
+  image: "{{ .Values.global.image.repository }}velotime-module-{{ .Values.module }}-migration:{{ .Values.global.image.tag }}"
+  imagePullPolicy: {{ $.Values.migration.image.pullPolicy }}
+  envFrom:
+    - configMapRef:
+        name: {{ include "velotime.fullname" . }}
+    - secretRef:
+        name: {{ include "velotime.fullname" . }}
+{{- end -}}
+{{- end -}}

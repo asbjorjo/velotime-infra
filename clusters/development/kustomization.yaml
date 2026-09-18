@@ -13,3 +13,6 @@ resources:
   - external-secrets-crds-kustomization.yaml
   - external-secrets-operator-kustomization.yaml
   - external-secrets-crs-kustomization.yaml
+  - velotime-namespace-kustomization.yaml
+  - velotime-secrets-kustomization.yaml
+  - velotime-kustomization.yaml

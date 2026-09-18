@@ -1,0 +1,81 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: velotime
+  namespace: flux-system
+spec:
+  interval: 1h
+  releaseName: velotime
+  targetNamespace: velotime
+  storageNamespace: velotime
+  timeout: 10m
+  chart:
+    spec:
+      chart: ./app/velotime
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    global:
+      image:
+        repository: ghcr.io/asbjorjo/
+        tag: 3.0.0-alpha.18
+      imagePullSecrets:
+        - name: ghcr
+    module-facilities-api:
+      existingSecret: velotime-module-facilities-api
+      cache:
+        host: velotime-valkey
+        port: 6379
+      database:
+        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
+        port: 11569
+        user: upadmin
+    module-statistics-api:
+      existingSecret: velotime-module-statistics-api
+      cache:
+        host: velotime-valkey
+        port: 6379
+      database:
+        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
+        port: 11569
+        user: upadmin
+    module-statistics-processor:
+      existingSecret: velotime-module-statistics-processor
+      cache:
+        host: velotime-valkey
+        port: 6379
+      database:
+        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
+        port: 11569
+        user: upadmin
+    module-timing-api:
+      existingSecret: velotime-module-timing-api
+      cache:
+        host: velotime-valkey
+        port: 6379
+      database:
+        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
+        port: 11569
+        user: upadmin
+    module-timing-processor:
+      existingSecret: velotime-module-timing-processor
+      cache:
+        host: velotime-valkey
+        port: 6379
+      database:
+        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
+        port: 11569
+        user: upadmin
+    webui:
+      existingSecret: velotime-webui
+    valkey:
+      replicaCount: 0
