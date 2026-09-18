@@ -2,6 +2,7 @@
     "chat.tools.terminal.autoApprove": {
         "awk": true,
         "exit": true,
+        "gh pr create": true,
         "git show": true,
         "git check-ignore": true,
         "git status": true,

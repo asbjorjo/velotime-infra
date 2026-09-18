@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - terraform/**
+      - flux-bootstrap/**
 
 permissions:
   contents: read
