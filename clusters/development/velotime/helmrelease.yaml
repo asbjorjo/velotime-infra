@@ -42,5 +42,9 @@ spec:
       existingSecret: velotime-module-timing-processor
     webui:
       existingSecret: velotime-webui
+      httpRoute:
+        parentRefs:
+          - name: gateway
+            namespace: gateway-system
     valkey:
       replicaCount: 0
