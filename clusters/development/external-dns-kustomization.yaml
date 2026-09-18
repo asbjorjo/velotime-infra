@@ -12,4 +12,6 @@ spec:
     name: flux-system
   dependsOn:
     - name: gateway-api-crds
+    - name: external-dns-namespace
+    - name: external-secrets-crs
   timeout: 5m
