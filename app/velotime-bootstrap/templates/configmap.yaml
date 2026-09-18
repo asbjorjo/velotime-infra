@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "velotime.fullname" . }}
+  labels:
+    {{- include "velotime.labels" . | nindent 4 }}
+data:
+  VELOTIMEDB_HOST: "{{ .Values.database.host }}"
+  VELOTIMEDB_PORT: "{{ .Values.database.port }}"
+  VELOTIMEDB_USERNAME: "{{ .Values.database.user }}"

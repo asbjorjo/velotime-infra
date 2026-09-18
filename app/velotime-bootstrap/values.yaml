@@ -1,0 +1,22 @@
+global:
+  image:
+    repository: ghcr.io/asbjorjo/
+    tag: 3.0.0-alpha.18
+  imagePullSecrets:
+    - name: ghcr
+existingSecret: ""
+database:
+  host: postgres-service
+  port: 5432
+  user: velotime
+  password: ""
+migrations:
+  - facilities
+  - statistics
+  - timing
+image:
+  tag: 3.0.0-alpha.18
+  pullPolicy: Always
+migration:
+  image:
+    pullPolicy: IfNotPresent
