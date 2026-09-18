@@ -2,12 +2,12 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: external-secrets
-  namespace: flux-system
+  namespace: external-secrets
 spec:
   interval: 1h
   releaseName: external-secrets
-  targetNamespace: flux-system
-  storageNamespace: flux-system
+  targetNamespace: external-secrets
+  storageNamespace: external-secrets
   timeout: 5m
   chart:
     spec:
