@@ -7,4 +7,5 @@ cluster_node_plan      = "CLOUDNATIVE-1xCPU-4GB"
 cluster_node_count     = 3
 cache_plan             = "1x1xCPU-1GB"
 database_plan          = "1x1xCPU-1GB-10GB"
+azure_location         = "swedencentral"
 termination_protection = true

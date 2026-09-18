@@ -1,0 +1,46 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: velotime
+  namespace: flux-system
+spec:
+  interval: 1h
+  releaseName: velotime
+  targetNamespace: velotime
+  storageNamespace: velotime
+  timeout: 10m
+  chart:
+    spec:
+      chart: ./app/velotime
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    global:
+      image:
+        repository: ghcr.io/asbjorjo/
+        tag: 3.0.0-alpha.18
+      imagePullSecrets:
+        - name: ghcr
+    module-facilities-api:
+      existingSecret: velotime-module-facilities-api
+    module-statistics-api:
+      existingSecret: velotime-module-statistics-api
+    module-statistics-processor:
+      existingSecret: velotime-module-statistics-processor
+    module-timing-api:
+      existingSecret: velotime-module-timing-api
+    module-timing-processor:
+      existingSecret: velotime-module-timing-processor
+    webui:
+      existingSecret: velotime-webui
+    valkey:
+      replicaCount: 0

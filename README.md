@@ -24,6 +24,9 @@ Configure the following variables in each Terraform GitHub Environment (`develop
 - `BACKEND_ENDPOINT`: The S3-compatible endpoint URL (e.g., `https://spfj4.upcloudobjects.com`).
 - `ADMIN_IP_FILTER`: JSON array of allowed IP addresses/CIDRs for admin access, such as `["203.0.113.10/32"]`. Passed as-is to Terraform's `admin_ip_filter` variable, which sets the cluster's `control_plane_ip_filter`. The `flux-bootstrap` workflow separately opens the control-plane API to its own runner's IP for the duration of its run (see [Flux CD Bootstrap](#flux-cd-bootstrap)); it does not modify this variable's persisted value.
 - `FLUX_GIT_USERNAME`: Username for Flux's `flux-system` git pull secret. It is passed to Flux bootstrap at runtime.
+- `AZURE_TF_CLIENT_ID`: Client ID of the dedicated Terraform service principal used by the `terraform/keyvault` module (authenticates via GitHub Actions OIDC federated credential, no client secret).
+- `AZURE_TENANT_ID`: Azure AD tenant ID for that service principal.
+- `AZURE_ESO_OBJECT_ID`: Azure AD object ID (not client ID) of the External Secrets service principal (`AZURE_CLIENT_ID` below), granted read-only access to the Key Vault created by `terraform/keyvault`.
 
 The `flux-bootstrap` workflow additionally accepts `AZURE_CLIENT_ID`, the non-sensitive client ID used by the `external-secrets` `azure-keyvault` `ClusterSecretStore` (see `clusters/<environment>/external-secrets/crs/clustersecretstore.yaml`). When it is unset, `flux-bootstrap` skips creating the `external-secrets-azure-config` authentication Secret in `flux-system`. This service principal needs permission to read secrets from the configured Key Vault.
 
@@ -37,6 +40,7 @@ Configure these secrets (at the environment or repository level):
 - `CLUSTER_SSH_KEYS`: SSH public keys for cluster access.
 - `DATABASE_USERNAME` / `DATABASE_PASSWORD`: Database credentials.
 - `CACHE_DB_USERNAME` / `CACHE_DB_PASSWORD`: Cache database credentials.
+- `AZURE_SUBSCRIPTION_ID`: Azure subscription for the `terraform/keyvault` module's resource group and Key Vault.
 
 The `flux-bootstrap` workflow additionally requires:
 
@@ -53,6 +57,10 @@ For each environment that deploys external-dns, populate these secrets in the va
 - `external-dns-azure-client-secret`: Client secret of the external-dns service principal.
 
 The external-dns service principal needs `Reader` on the resource group and `Contributor` or `DNS Zone Contributor` on the DNS zone. Flux first reconciles the dedicated `external-dns-namespace` Kustomization, then the ExternalSecret renders these values into the `external-dns/external-dns-azure-config` Secret's `azure.json` key. The external-dns Kustomization waits for that Secret before reconciling its HelmRelease; OpenTofu no longer creates the namespace or configuration Secret.
+
+### Azure Key Vault (`terraform/keyvault`)
+
+The core `terraform/` deployment provisions a per-environment Azure resource group (`velotime-infra-<basename>`) and Key Vault (`velotime-<basename>`), and writes the cache/database host, port, admin username, and admin password into it as `velotime-cache-*`/`velotime-database-*` secrets — the same secret names the `external-secrets` `azure-keyvault` `ClusterSecretStore` already reads from. Authentication uses `AZURE_TF_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` via GitHub Actions OIDC (`ARM_USE_OIDC`); a matching federated credential must exist on that app registration in Azure AD for each environment (subject `repo:<org>/<repo>:environment:development`/`:environment:production`). The module grants itself `Key Vault Secrets Officer` and grants the existing `AZURE_ESO_OBJECT_ID` principal `Key Vault Secrets User`.
 
 The derived Object Storage buckets must exist before their workflows run. Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate existing state, including state in legacy buckets such as `velotime-tfstate-dev`, to the derived bucket before the apply workflow runs.
 

@@ -25,27 +25,46 @@ module "cluster" {
   admin_ip_filter = var.admin_ip_filter
 }
 
-# module "cache" {
-#   source = "./cache"
+module "cache" {
+  source = "./cache"
 
-#   basename = var.basename
-#   network  = module.network.network_id
-#   zone     = var.zone
-#   plan     = var.cache_plan
+  basename = var.basename
+  network  = module.network.network_id
+  zone     = var.zone
+  plan     = var.cache_plan
 
-#   admin_ip_filter = var.admin_ip_filter
-#   db_username     = var.cache_db_username
-#   db_password     = var.cache_db_password
-# }
+  admin_ip_filter = var.admin_ip_filter
+  db_username     = var.cache_db_username
+  db_password     = var.cache_db_password
+}
 
-# module "database" {
-#   source = "./database"
+module "database" {
+  source = "./database"
 
-#   basename = var.basename
-#   network  = module.network.network_id
-#   zone     = var.zone
-#   plan     = var.database_plan
+  basename = var.basename
+  network  = module.network.network_id
+  zone     = var.zone
+  plan     = var.database_plan
 
-#   username = var.database_username
-#   password = var.database_password
-# }
+  username = var.database_username
+  password = var.database_password
+}
+
+module "keyvault" {
+  source = "./keyvault"
+
+  basename                = var.basename
+  location                = var.azure_location
+  eso_principal_object_id = var.azure_eso_object_id
+  termination_protection  = var.termination_protection
+
+  cache_host     = module.cache.database_host
+  cache_port     = module.cache.database_port
+  cache_username = var.cache_db_username
+  cache_password = var.cache_db_password
+
+  database_host     = module.database.database_host
+  database_port     = module.database.database_port
+  database_username = var.database_username
+  database_password = var.database_password
+}

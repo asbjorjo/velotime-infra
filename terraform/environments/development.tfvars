@@ -7,3 +7,4 @@ cluster_node_plan    = "STARTER-1xCPU-2GB"
 cluster_node_count   = 3
 cache_plan           = "1x1xCPU-1GB"
 database_plan        = "1x1xCPU-1GB-10GB"
+azure_location       = "swedencentral"
