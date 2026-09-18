@@ -6,8 +6,8 @@ metadata:
 spec:
   interval: 1h
   releaseName: external-secrets
-  targetNamespace: external-secrets
-  storageNamespace: external-secrets
+  targetNamespace: flux-system
+  storageNamespace: flux-system
   timeout: 5m
   chart:
     spec:

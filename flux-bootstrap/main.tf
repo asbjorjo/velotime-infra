@@ -6,7 +6,6 @@ module "flux_operator_bootstrap" {
 
   depends_on = [
     resource.kubernetes_namespace_v1.external_dns, resource.kubernetes_secret_v1.external_dns_azure_config,
-    resource.kubernetes_namespace_v1.external_secrets, resource.kubernetes_secret_v1.external_secrets_azure_config,
   ]
 
   gitops_resources = {
@@ -15,16 +14,32 @@ module "flux_operator_bootstrap" {
 
   # Reconciled by Terraform on every apply; only a hash is persisted to state, never the token.
   managed_resources = {
-    secrets_yaml = <<-YAML
-      apiVersion: v1
-      kind: Secret
-      metadata:
-        name: flux-system
-      type: Opaque
-      stringData:
-        username: ${var.flux_git_username}
-        password: ${var.flux_git_token}
-      YAML
+    secrets_yaml = join("\n---\n", compact([
+      yamlencode({
+        apiVersion = "v1"
+        kind       = "Secret"
+        metadata = {
+          name = "flux-system"
+        }
+        type = "Opaque"
+        stringData = {
+          username = var.flux_git_username
+          password = var.flux_git_token
+        }
+      }),
+      local.external_dns_azure_enabled ? yamlencode({
+        apiVersion = "v1"
+        kind       = "Secret"
+        metadata = {
+          name = "external-secrets-azure-config"
+        }
+        type = "Opaque"
+        stringData = {
+          clientId     = var.azure_client_id
+          clientSecret = var.azure_client_secret
+        }
+      }) : "",
+    ]))
   }
 
   debug_on_failure = true
@@ -62,34 +77,6 @@ resource "kubernetes_secret_v1" "external_dns_azure_config" {
       aadClientId     = var.azure_client_id
       aadClientSecret = var.azure_client_secret
     })
-  }
-
-  type = "Opaque"
-}
-
-# Namespace is also declared in clusters/<environment>/external-secrets/namespace.yaml; Flux adopts it once the
-# external-secrets Kustomization reconciles, per the module's namespace hand-off behavior.
-resource "kubernetes_namespace_v1" "external_secrets" {
-  count = local.external_dns_azure_enabled ? 1 : 0
-
-  metadata {
-    name = "external-secrets"
-  }
-}
-
-# Consumed by the azure-keyvault ClusterSecretStore's authSecretRef; reuses the external-dns Azure service
-# principal, which must also have access to the Key Vault referenced there.
-resource "kubernetes_secret_v1" "external_secrets_azure_config" {
-  count = local.external_dns_azure_enabled ? 1 : 0
-
-  metadata {
-    name      = "external-secrets-azure-config"
-    namespace = kubernetes_namespace_v1.external_secrets[0].metadata[0].name
-  }
-
-  data = {
-    clientId     = var.azure_client_id
-    clientSecret = var.azure_client_secret
   }
 
   type = "Opaque"
