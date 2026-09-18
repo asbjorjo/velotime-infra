@@ -24,16 +24,16 @@ resource "azurerm_role_assignment" "terraform_secrets_officer" {
 }
 
 resource "azurerm_role_assignment" "eso_secrets_user" {
-  scope                = azurerm_key_vault.instance.id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = var.eso_principal_object_id
+  scope                            = azurerm_key_vault.instance.id
+  role_definition_name             = "Key Vault Secrets User"
+  principal_id                     = var.eso_principal_object_id
+  skip_service_principal_aad_check = true
 }
 
 # RBAC role assignments take time to propagate; wait before writing secrets on first apply.
 resource "time_sleep" "rbac_propagation" {
   depends_on = [
-    azurerm_role_assignment.terraform_secrets_officer,
-    azurerm_role_assignment.eso_secrets_user,
+    azurerm_role_assignment.terraform_secrets_officer
   ]
 
   create_duration = "30s"
