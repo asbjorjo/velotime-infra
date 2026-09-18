@@ -91,3 +91,13 @@ variable "termination_protection" {
   type        = bool
   default     = false
 }
+
+variable "azure_location" {
+  description = "Azure region for the Key Vault resource group."
+  type        = string
+}
+
+variable "azure_eso_object_id" {
+  description = "Azure AD object id of the External Secrets service principal, granted read-only access to the Key Vault."
+  type        = string
+}

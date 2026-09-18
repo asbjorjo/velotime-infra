@@ -16,6 +16,9 @@ jobs:
     name: "OpenTofu Plan (development)"
     runs-on: ubuntu-latest
     environment: development
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: opentofu-plan-development
       cancel-in-progress: false
@@ -30,6 +33,11 @@ jobs:
       TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
       TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
       TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
+      TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
+      ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
 
     steps:
       - name: Checkout Code
@@ -62,6 +70,9 @@ jobs:
     needs: development-plan
     runs-on: ubuntu-latest
     environment: development
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: opentofu-apply-development
       cancel-in-progress: false
@@ -76,6 +87,11 @@ jobs:
       TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
       TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
       TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
+      TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
+      ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
 
     steps:
       - name: Checkout Code
@@ -112,6 +128,9 @@ jobs:
     needs: development-apply
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: opentofu-plan-production
       cancel-in-progress: false
@@ -126,6 +145,11 @@ jobs:
       TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
       TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
       TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
+      TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
+      ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
 
     steps:
       - name: Checkout Code
@@ -168,6 +192,9 @@ jobs:
     needs: production-approval
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: opentofu-apply-production
       cancel-in-progress: false
@@ -182,6 +209,11 @@ jobs:
       TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
       TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
       TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
+      TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
+      ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_USE_OIDC: true
 
     steps:
       - name: Checkout Code

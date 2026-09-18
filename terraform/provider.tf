@@ -11,5 +11,15 @@ terraform {
       source  = "UpCloudLtd/upcloud"
       version = ">= 5.34.0"
     }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
   }
+}
+
+provider "azurerm" {
+  features {}
+
+  use_oidc = true
 }
