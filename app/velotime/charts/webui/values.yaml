@@ -1,4 +1,6 @@
 existingSecret: ""
+configMap:
+  enabled: true
 cache:
 image:
   tag: 3.0.0.alpha.18

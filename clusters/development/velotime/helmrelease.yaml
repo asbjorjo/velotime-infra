@@ -32,49 +32,14 @@ spec:
         - name: ghcr
     module-facilities-api:
       existingSecret: velotime-module-facilities-api
-      cache:
-        host: velotime-valkey
-        port: 6379
-      database:
-        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
-        port: 11569
-        user: upadmin
     module-statistics-api:
       existingSecret: velotime-module-statistics-api
-      cache:
-        host: velotime-valkey
-        port: 6379
-      database:
-        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
-        port: 11569
-        user: upadmin
     module-statistics-processor:
       existingSecret: velotime-module-statistics-processor
-      cache:
-        host: velotime-valkey
-        port: 6379
-      database:
-        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
-        port: 11569
-        user: upadmin
     module-timing-api:
       existingSecret: velotime-module-timing-api
-      cache:
-        host: velotime-valkey
-        port: 6379
-      database:
-        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
-        port: 11569
-        user: upadmin
     module-timing-processor:
       existingSecret: velotime-module-timing-processor
-      cache:
-        host: velotime-valkey
-        port: 6379
-      database:
-        host: velotime-dev-pg-czocgpemczey.db.upclouddatabases.com
-        port: 11569
-        user: upadmin
     webui:
       existingSecret: velotime-webui
     valkey:
