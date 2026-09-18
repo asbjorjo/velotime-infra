@@ -36,7 +36,6 @@ spec:
       name: azure
     extraArgs:
       azure-resource-group: velotime-rg-noe
-    # azure.json is provisioned by flux-bootstrap's Terraform (kubernetes_secret_v1.external_dns_azure_config), not by this chart or Flux.
     extraVolumes:
       - name: azure-config-file
         secret:

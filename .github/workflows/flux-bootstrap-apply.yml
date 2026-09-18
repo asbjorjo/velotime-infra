@@ -26,8 +26,6 @@ jobs:
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_flux_git_token: ${{ secrets.FLUX_GIT_TOKEN }}
       TF_VAR_flux_git_username: ${{ vars.FLUX_GIT_USERNAME }}
-      TF_VAR_azure_tenant_id: ${{ vars.AZURE_TENANT_ID }}
-      TF_VAR_azure_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       TF_VAR_azure_client_id: ${{ vars.AZURE_CLIENT_ID }}
       TF_VAR_azure_client_secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 

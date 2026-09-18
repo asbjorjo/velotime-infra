@@ -1,0 +1,41 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: external-dns-azure-config
+  namespace: external-dns
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: azure-keyvault
+  target:
+    name: external-dns-azure-config
+    creationPolicy: Owner
+    template:
+      engineVersion: v2
+      type: Opaque
+      data:
+        azure.json: |
+          {
+            "tenantId": {{ .tenantId | toJson }},
+            "subscriptionId": {{ .subscriptionId | toJson }},
+            "resourceGroup": {{ .resourceGroup | toJson }},
+            "aadClientId": {{ .clientId | toJson }},
+            "aadClientSecret": {{ .clientSecret | toJson }}
+          }
+  data:
+    - secretKey: tenantId
+      remoteRef:
+        key: external-dns-azure-tenant-id
+    - secretKey: subscriptionId
+      remoteRef:
+        key: external-dns-azure-subscription-id
+    - secretKey: resourceGroup
+      remoteRef:
+        key: external-dns-azure-resource-group
+    - secretKey: clientId
+      remoteRef:
+        key: external-dns-azure-client-id
+    - secretKey: clientSecret
+      remoteRef:
+        key: external-dns-azure-client-secret
