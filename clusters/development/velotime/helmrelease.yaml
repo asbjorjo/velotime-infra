@@ -27,21 +27,21 @@ spec:
     global:
       image:
         repository: ghcr.io/asbjorjo/
-        tag: 3.0.0-alpha.18
+        tag: 3.0.0-alpha.56
       imagePullSecrets:
         - name: ghcr
     module-facilities-api:
-      existingSecret: velotime-module-facilities-api
+      existingSecret: module-facilities-api
     module-statistics-api:
-      existingSecret: velotime-module-statistics-api
+      existingSecret: module-statistics-api
     module-statistics-processor:
-      existingSecret: velotime-module-statistics-processor
+      existingSecret: module-statistics-processor
     module-timing-api:
-      existingSecret: velotime-module-timing-api
+      existingSecret: module-timing-api
     module-timing-processor:
-      existingSecret: velotime-module-timing-processor
+      existingSecret: module-timing-processor
     webui:
-      existingSecret: velotime-webui
+      existingSecret: webui
       httpRoute:
         parentRefs:
           - name: gateway

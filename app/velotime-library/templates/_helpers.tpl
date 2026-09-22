@@ -66,11 +66,12 @@ Create the name of the service account to use
 {{- end -}}
 
 {{- define "velotime.connectionStringRedis" -}}
-{{- printf "%s:%s,password=%s" .host (.port | toString) .password }}
+{{- printf "%s:%s,user=%s,password=%s,ssl=true" .host (.port | toString) .user .password }}
 {{- end -}}
 
 {{- define "velotime.moduleApiHttp" -}}
-{{- printf "http://%s-module-%s-api/" .release .module }}
+{{ $ := .root }}
+{{- printf "http://module-%s-api/" .module }}
 {{- end -}}
 
 {{- define "velotime.databaseUri" -}}

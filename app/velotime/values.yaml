@@ -1,8 +1,8 @@
 global:
   image:
     repository: ghcr.io/asbjorjo/
-    tag: 3.0.0-alpha.18
+    tag: 3.0.0-alpha.27
   imagePullSecrets:
     - name: ghcr
 valkey:
-  replicaCount: 0
+  replicaCount: 1

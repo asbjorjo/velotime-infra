@@ -1,6 +1,8 @@
 existingSecret: ""
 configMap:
   enabled: true
+keycloak:
+  host: ""
 cache:
 image:
   tag: 3.0.0.alpha.18

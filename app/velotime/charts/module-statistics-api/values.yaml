@@ -1,5 +1,7 @@
 module: statistics
 existingSecret: ""
+configMap:
+  enabled: true
 cache:
   host: cache-service
   port: 1234
