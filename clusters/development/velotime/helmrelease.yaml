@@ -27,7 +27,7 @@ spec:
     global:
       image:
         repository: ghcr.io/asbjorjo/
-        tag: 3.0.0-alpha.18
+        tag: 3.0.0-alpha.56
       imagePullSecrets:
         - name: ghcr
     module-facilities-api:
