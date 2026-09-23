@@ -35,7 +35,6 @@ module "cache" {
 
   admin_ip_filter = var.admin_ip_filter
   db_username     = var.cache_db_username
-  db_password     = var.cache_db_password
 }
 
 module "database" {
@@ -47,10 +46,8 @@ module "database" {
   plan     = var.database_plan
 
   username = var.database_username
-  password = var.database_password
 
   keycloak_username = var.keycloak_database_username
-  keycloak_password = var.keycloak_database_password
 }
 
 module "keyvault" {
@@ -68,12 +65,12 @@ module "keyvault" {
 
   database_host     = module.database.database_host
   database_port     = module.database.database_port
-  database_username = module.database.database_admin_username
-  database_password = module.database.database_admin_password
+  database_username = module.database.database_username
+  database_password = module.database.database_password
 
   keycloak_database_host     = module.database.database_host
   keycloak_database_port     = module.database.database_port
   keycloak_database_name     = module.database.keycloak_database_name
-  keycloak_database_username = module.database.database_admin_username
-  keycloak_database_password = module.database.database_admin_password
+  keycloak_database_username = module.database.keycloak_database_username
+  keycloak_database_password = module.database.keycloak_database_password
 }
