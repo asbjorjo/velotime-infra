@@ -58,6 +58,33 @@ variable "database_password" {
   sensitive   = true
 }
 
+variable "keycloak_database_host" {
+  description = "Keycloak database host, stored in the vault as keycloak-database-host."
+  type        = string
+}
+
+variable "keycloak_database_port" {
+  description = "Keycloak database port, stored in the vault as keycloak-database-port."
+  type        = string
+}
+
+variable "keycloak_database_name" {
+  description = "Keycloak database name, stored in the vault as keycloak-database-name."
+  type        = string
+}
+
+variable "keycloak_database_username" {
+  description = "Keycloak database username, stored in the vault as keycloak-database-user."
+  type        = string
+  sensitive   = true
+}
+
+variable "keycloak_database_password" {
+  description = "Keycloak database password, stored in the vault as keycloak-database-password."
+  type        = string
+  sensitive   = true
+}
+
 variable "termination_protection" {
   description = "Protect resources from deletion and shutdown"
   type        = bool
