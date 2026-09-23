@@ -1,3 +1,4 @@
+{{- if .Values.configMap.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -8,3 +9,4 @@ data:
   VELOTIMEDB_HOST: "{{ .Values.database.host }}"
   VELOTIMEDB_PORT: "{{ .Values.database.port }}"
   VELOTIMEDB_USERNAME: "{{ .Values.database.user }}"
+{{- end }}
