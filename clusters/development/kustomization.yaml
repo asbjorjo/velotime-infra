@@ -7,8 +7,6 @@ resources:
   - cert-manager-kustomization.yaml
   - cert-manager-issuer-kustomization.yaml
   - gateway-kustomization.yaml
-  - olm-kustomization.yaml
-  - olm-catalog-kustomization.yaml
   - keycloak-namespace-kustomization.yaml
   - keycloak-operator-kustomization.yaml
   - external-dns-namespace-kustomization.yaml
