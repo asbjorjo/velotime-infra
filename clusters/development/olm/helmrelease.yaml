@@ -1,0 +1,42 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: olm
+  namespace: flux-system
+spec:
+  interval: 1h
+  releaseName: olm
+  targetNamespace: operator-lifecycle-manager
+  storageNamespace: operator-lifecycle-manager
+  timeout: 10m
+  chart:
+    spec:
+      chart: olm
+      version: "0.36.0"
+      sourceRef:
+        kind: HelmRepository
+        name: cloudtooling-oci
+        namespace: flux-system
+      interval: 1h
+  install:
+    remediation:
+      retries: 0
+  upgrade:
+    remediation:
+      retries: 0
+  values:
+    networkPolicy:
+      kubeAPIServer:
+        namespaceSelector: {}
+        podSelector: {}
+        ports:
+          - protocol: TCP
+            port: 443
+          - protocol: TCP
+            port: 6443
+      dns:
+        ports:
+          - protocol: TCP
+            port: 53
+          - protocol: UDP
+            port: 53

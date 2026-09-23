@@ -1,0 +1,20 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak
+  namespace: flux-system
+spec:
+  interval: 1h
+  retryInterval: 1m
+  path: ./clusters/development/keycloak
+  prune: true
+  wait: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: external-secrets-crs
+    - name: gateway
+    - name: keycloak-namespace
+    - name: keycloak-operator
+  timeout: 10m

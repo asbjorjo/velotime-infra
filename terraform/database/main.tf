@@ -33,6 +33,16 @@ resource "upcloud_managed_database_user" "velotime" {
   }
 }
 
+resource "upcloud_managed_database_user" "keycloak" {
+  service  = upcloud_managed_database_postgresql.instance.id
+  username = var.keycloak_username
+  password = var.keycloak_password
+
+  pg_access_control {
+    allow_replication = false
+  }
+}
+
 resource "upcloud_managed_database_logical_database" "velotime_db" {
   service = upcloud_managed_database_postgresql.instance.id
   name    = "velotimedb"

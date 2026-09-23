@@ -8,6 +8,7 @@ spec:
   # TODO: replace with the real hostname once DNS points at this Gateway's address.
   dnsNames:
     - development.veloti.me
+    - auth.development.veloti.me
   issuerRef:
     name: letsencrypt-staging
     kind: ClusterIssuer

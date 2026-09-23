@@ -7,6 +7,10 @@ resources:
   - cert-manager-kustomization.yaml
   - cert-manager-issuer-kustomization.yaml
   - gateway-kustomization.yaml
+  - olm-kustomization.yaml
+  - olm-catalog-kustomization.yaml
+  - keycloak-namespace-kustomization.yaml
+  - keycloak-operator-kustomization.yaml
   - external-dns-namespace-kustomization.yaml
   - external-dns-kustomization.yaml
   - external-secrets-kustomization.yaml
@@ -14,5 +18,6 @@ resources:
   - external-secrets-operator-kustomization.yaml
   - external-secrets-crs-kustomization.yaml
   - velotime-namespace-kustomization.yaml
+  - keycloak-kustomization.yaml
   - velotime-secrets-kustomization.yaml
   - velotime-kustomization.yaml

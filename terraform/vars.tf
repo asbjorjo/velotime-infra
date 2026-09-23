@@ -86,6 +86,18 @@ variable "database_password" {
   sensitive   = true
 }
 
+variable "keycloak_database_username" {
+  description = "Username for the Keycloak database user."
+  type        = string
+  sensitive   = true
+}
+
+variable "keycloak_database_password" {
+  description = "Password for the Keycloak database user."
+  type        = string
+  sensitive   = true
+}
+
 variable "termination_protection" {
   description = "Protect resources from deletion and shutdown"
   type        = bool

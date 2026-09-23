@@ -94,3 +94,38 @@ resource "azurerm_key_vault_secret" "database_password" {
   key_vault_id = azurerm_key_vault.instance.id
   depends_on   = [time_sleep.rbac_propagation]
 }
+
+resource "azurerm_key_vault_secret" "keycloak_database_host" {
+  name         = "keycloak-database-host"
+  value        = var.keycloak_database_host
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "keycloak_database_port" {
+  name         = "keycloak-database-port"
+  value        = var.keycloak_database_port
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "keycloak_database_name" {
+  name         = "keycloak-database-name"
+  value        = var.keycloak_database_name
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "keycloak_database_username" {
+  name         = "keycloak-database-user"
+  value        = var.keycloak_database_username
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "keycloak_database_password" {
+  name         = "keycloak-database-password"
+  value        = var.keycloak_database_password
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
