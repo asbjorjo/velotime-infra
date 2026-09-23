@@ -38,9 +38,6 @@ Configure these secrets (at the environment or repository level):
 - `UPCLOUD_S3_ACCESS_KEY_ID`: UpCloud Object Storage access key ID.
 - `UPCLOUD_S3_SECRET_ACCESS_KEY`: UpCloud Object Storage secret access key.
 - `CLUSTER_SSH_KEYS`: SSH public keys for cluster access.
-- `DATABASE_USERNAME` / `DATABASE_PASSWORD`: Database credentials.
-- `KEYCLOAK_DATABASE_USERNAME` / `KEYCLOAK_DATABASE_PASSWORD`: Keycloak database credentials written to Azure Key Vault.
-- `CACHE_DB_USERNAME` / `CACHE_DB_PASSWORD`: Cache database credentials.
 - `AZURE_SUBSCRIPTION_ID`: Azure subscription for the `terraform/keyvault` module's resource group and Key Vault.
 
 The `flux-bootstrap` workflow additionally requires:
@@ -61,7 +58,7 @@ The external-dns service principal needs `Reader` on the resource group and `Con
 
 ### Azure Key Vault (`terraform/keyvault`)
 
-The core `terraform/` deployment provisions a per-environment Azure resource group (`velotime-infra-<basename>`) and Key Vault (`velotime-<basename>`), and writes the cache/database host, port, username, and password into it as `velotime-cache-*`/`velotime-database-*` secrets. It also creates a `keycloak` logical database with its own user, then writes those connection values as `keycloak-database-host`, `keycloak-database-port`, `keycloak-database-name`, `keycloak-database-user`, and `keycloak-database-password` — the same secret names the `external-secrets` `azure-keyvault` `ClusterSecretStore` reads from. Authentication uses `AZURE_TF_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` via GitHub Actions OIDC (`ARM_USE_OIDC`); a matching federated credential must exist on that app registration in Azure AD for each environment (subject `repo:<org>/<repo>:environment:development`/`:environment:production`). The module grants itself `Key Vault Secrets Officer` and grants the existing `AZURE_ESO_OBJECT_ID` principal `Key Vault Secrets User`.
+The core `terraform/` deployment provisions a per-environment Azure resource group (`velotime-infra-<basename>`) and Key Vault (`velotime-<basename>`), and writes the cache/database host, port, username, and Terraform-generated password into it as `velotime-cache-*`/`velotime-database-*` secrets. It also creates a `keycloak` logical database with its own user, then writes those connection values as `keycloak-database-host`, `keycloak-database-port`, `keycloak-database-name`, `keycloak-database-user`, and `keycloak-database-password` — the same secret names the `external-secrets` `azure-keyvault` `ClusterSecretStore` reads from. Database usernames default to `velotime` for cache and application database access and `keycloak` for Keycloak database access. Database passwords are generated inside the Terraform modules and are not passed through GitHub environment secrets. Authentication uses `AZURE_TF_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` via GitHub Actions OIDC (`ARM_USE_OIDC`); a matching federated credential must exist on that app registration in Azure AD for each environment (subject `repo:<org>/<repo>:environment:development`/`:environment:production`). The module grants itself `Key Vault Secrets Officer` and grants the existing `AZURE_ESO_OBJECT_ID` principal `Key Vault Secrets User`.
 
 The derived Object Storage buckets must exist before their workflows run. Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate existing state, including state in legacy buckets such as `velotime-tfstate-dev`, to the derived bucket before the apply workflow runs.
 

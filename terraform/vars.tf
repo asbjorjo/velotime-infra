@@ -65,36 +65,21 @@ variable "admin_ip_filter" {
 variable "cache_db_username" {
   description = "Username for the cache database user."
   type        = string
-  sensitive   = true
-}
-
-variable "cache_db_password" {
-  description = "Password for the cache database user."
-  type        = string
+  default     = "velotime"
   sensitive   = true
 }
 
 variable "database_username" {
   description = "Username for the database user."
   type        = string
-  sensitive   = true
-}
-
-variable "database_password" {
-  description = "Password for the database user."
-  type        = string
+  default     = "velotime"
   sensitive   = true
 }
 
 variable "keycloak_database_username" {
   description = "Username for the Keycloak database user."
   type        = string
-  sensitive   = true
-}
-
-variable "keycloak_database_password" {
-  description = "Password for the Keycloak database user."
-  type        = string
+  default     = "keycloak"
   sensitive   = true
 }
 

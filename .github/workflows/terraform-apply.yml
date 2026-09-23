@@ -29,12 +29,6 @@ jobs:
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
       TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
-      TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
-      TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
-      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
-      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
-      TF_VAR_keycloak_database_username: ${{ secrets.KEYCLOAK_DATABASE_USERNAME }}
-      TF_VAR_keycloak_database_password: ${{ secrets.KEYCLOAK_DATABASE_PASSWORD }}
       TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
       ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -85,12 +79,6 @@ jobs:
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
       TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
-      TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
-      TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
-      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
-      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
-      TF_VAR_keycloak_database_username: ${{ secrets.KEYCLOAK_DATABASE_USERNAME }}
-      TF_VAR_keycloak_database_password: ${{ secrets.KEYCLOAK_DATABASE_PASSWORD }}
       TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
       ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -145,12 +133,6 @@ jobs:
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
       TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
-      TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
-      TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
-      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
-      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
-      TF_VAR_keycloak_database_username: ${{ secrets.KEYCLOAK_DATABASE_USERNAME }}
-      TF_VAR_keycloak_database_password: ${{ secrets.KEYCLOAK_DATABASE_PASSWORD }}
       TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
       ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -211,12 +193,6 @@ jobs:
       UPCLOUD_TOKEN: ${{ secrets.UPCLOUD_TOKEN }}
       TF_VAR_ssh_keys: ${{ secrets.CLUSTER_SSH_KEYS }}
       TF_VAR_admin_ip_filter: ${{ vars.ADMIN_IP_FILTER }}
-      TF_VAR_cache_db_username: ${{ secrets.CACHE_DB_USERNAME }}
-      TF_VAR_cache_db_password: ${{ secrets.CACHE_DB_PASSWORD }}
-      TF_VAR_database_username: ${{ secrets.DATABASE_USERNAME }}
-      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
-      TF_VAR_keycloak_database_username: ${{ secrets.KEYCLOAK_DATABASE_USERNAME }}
-      TF_VAR_keycloak_database_password: ${{ secrets.KEYCLOAK_DATABASE_PASSWORD }}
       TF_VAR_azure_eso_object_id: ${{ vars.AZURE_ESO_OBJECT_ID }}
       ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}

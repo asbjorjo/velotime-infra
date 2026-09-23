@@ -29,12 +29,7 @@ variable "admin_ip_filter" {
 variable "db_username" {
   description = "Username for the cache database user."
   type        = string
-  sensitive   = true
-}
-
-variable "db_password" {
-  description = "Password for the cache database user."
-  type        = string
+  default     = "velotime"
   sensitive   = true
 }
 
