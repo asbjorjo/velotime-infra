@@ -58,5 +58,7 @@ spec:
         parentRefs:
           - name: gateway
             namespace: gateway-system
+        hostnames:
+          - development.veloti.me
     valkey:
       replicaCount: 0
