@@ -11,13 +11,13 @@ terraform {
   }
 }
 
-provider "postgresql" {
-  host            = upcloud_managed_database_postgresql.instance.service_host
-  port            = upcloud_managed_database_postgresql.instance.service_port
-  database        = upcloud_managed_database_postgresql.instance.primary_database
-  username        = upcloud_managed_database_postgresql.instance.service_username
-  password        = upcloud_managed_database_postgresql.instance.service_password
-  sslmode         = upcloud_managed_database_postgresql.instance.sslmode
-  connect_timeout = 15
-  superuser       = false
-}
+# provider "postgresql" {
+#   host            = upcloud_managed_database_postgresql.instance.service_host
+#   port            = upcloud_managed_database_postgresql.instance.service_port
+#   database        = upcloud_managed_database_postgresql.instance.primary_database
+#   username        = upcloud_managed_database_postgresql.instance.service_username
+#   password        = upcloud_managed_database_postgresql.instance.service_password
+#   sslmode         = upcloud_managed_database_postgresql.instance.sslmode
+#   connect_timeout = 15
+#   superuser       = false
+# }

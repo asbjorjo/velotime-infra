@@ -14,6 +14,16 @@ output "database_name" {
   value = upcloud_managed_database_logical_database.velotime_db.name
 }
 
+output "database_admin_username" {
+  value     = upcloud_managed_database_postgresql.instance.service_username
+  sensitive = true
+}
+
+output "database_admin_password" {
+  value     = upcloud_managed_database_postgresql.instance.service_password
+  sensitive = true
+}
+
 output "database_username" {
   value     = upcloud_managed_database_user.velotime.username
   sensitive = true

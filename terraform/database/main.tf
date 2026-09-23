@@ -63,26 +63,26 @@ resource "upcloud_managed_database_logical_database" "keycloak_db" {
   name    = "keycloak"
 }
 
-resource "postgresql_grant" "velotime_database" {
-  database    = upcloud_managed_database_logical_database.velotime_db.name
-  role        = upcloud_managed_database_user.velotime.username
-  object_type = "database"
-  privileges  = ["CONNECT", "CREATE", "TEMPORARY"]
+# resource "postgresql_grant" "velotime_database" {
+#   database    = upcloud_managed_database_logical_database.velotime_db.name
+#   role        = upcloud_managed_database_user.velotime.username
+#   object_type = "database"
+#   privileges  = ["CONNECT", "CREATE", "TEMPORARY"]
 
-  depends_on = [
-    upcloud_managed_database_logical_database.velotime_db,
-    upcloud_managed_database_user.velotime,
-  ]
-}
+#   depends_on = [
+#     upcloud_managed_database_logical_database.velotime_db,
+#     upcloud_managed_database_user.velotime,
+#   ]
+# }
 
-resource "postgresql_grant" "keycloak_database" {
-  database    = upcloud_managed_database_logical_database.keycloak_db.name
-  role        = upcloud_managed_database_user.keycloak.username
-  object_type = "database"
-  privileges  = ["CONNECT", "CREATE", "TEMPORARY"]
+# resource "postgresql_grant" "keycloak_database" {
+#   database    = upcloud_managed_database_logical_database.keycloak_db.name
+#   role        = upcloud_managed_database_user.keycloak.username
+#   object_type = "database"
+#   privileges  = ["CONNECT", "CREATE", "TEMPORARY"]
 
-  depends_on = [
-    upcloud_managed_database_logical_database.keycloak_db,
-    upcloud_managed_database_user.keycloak,
-  ]
-}
+#   depends_on = [
+#     upcloud_managed_database_logical_database.keycloak_db,
+#     upcloud_managed_database_user.keycloak,
+#   ]
+# }

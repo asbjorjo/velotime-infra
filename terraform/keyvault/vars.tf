@@ -46,6 +46,18 @@ variable "database_port" {
   type        = string
 }
 
+variable "database_admin_username" {
+  description = "Database admin username, stored in the vault as velotime-database-admin-username."
+  type        = string
+  sensitive   = true
+}
+
+variable "database_admin_password" {
+  description = "Database admin password, stored in the vault as velotime-database-admin-password."
+  type        = string
+  sensitive   = true
+}
+
 variable "database_username" {
   description = "Database admin username, stored in the vault as velotime-database-user."
   type        = string

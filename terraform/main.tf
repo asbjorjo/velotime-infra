@@ -63,10 +63,12 @@ module "keyvault" {
   cache_username = module.cache.database_username
   cache_password = module.cache.database_password
 
-  database_host     = module.database.database_host
-  database_port     = module.database.database_port
-  database_username = module.database.database_username
-  database_password = module.database.database_password
+  database_host           = module.database.database_host
+  database_port           = module.database.database_port
+  database_admin_username = module.database.database_admin_username
+  database_admin_password = module.database.database_admin_password
+  database_username       = module.database.database_username
+  database_password       = module.database.database_password
 
   keycloak_database_host     = module.database.database_host
   keycloak_database_port     = module.database.database_port
