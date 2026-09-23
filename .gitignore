@@ -4,3 +4,5 @@ terraform.tfstate*
 kubeconfig.yml
 dill
 charts
+!app/velotime/charts/
+!app/velotime/charts/*.tgz

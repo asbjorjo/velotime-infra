@@ -8,7 +8,7 @@ initContainers:
     {{- with .Values.configMap }}
     {{- if .enabled }}
     - configMapRef:
-      name: {{ include "velotime.fullname" $ }}
+        name: {{ include "velotime.fullname" $ }}
     {{- end }}
     {{- end }}
     - secretRef:
