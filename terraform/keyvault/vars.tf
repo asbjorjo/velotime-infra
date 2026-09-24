@@ -46,6 +46,11 @@ variable "database_port" {
   type        = string
 }
 
+variable "database_admin_database" {
+  description = "Database instance's admin maintenance database, stored in the vault as velotime-database-admin-database."
+  type        = string
+}
+
 variable "database_admin_username" {
   description = "Database admin username, stored in the vault as velotime-database-admin-username."
   type        = string
@@ -87,6 +92,23 @@ variable "keycloak_database_name" {
 
 variable "keycloak_database_username" {
   description = "Keycloak database username, stored in the vault as keycloak-database-user."
+  type        = string
+  sensitive   = true
+}
+
+variable "keycloak_database_admin_database" {
+  description = "Database instance's admin maintenance database, stored in the vault as keycloak-database-admin-database."
+  type        = string
+}
+
+variable "keycloak_database_admin_username" {
+  description = "Database instance admin/superuser username, stored in the vault as keycloak-database-admin-user."
+  type        = string
+  sensitive   = true
+}
+
+variable "keycloak_database_admin_password" {
+  description = "Database instance admin/superuser password, stored in the vault as keycloak-database-admin-password."
   type        = string
   sensitive   = true
 }

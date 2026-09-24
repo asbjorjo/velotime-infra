@@ -17,4 +17,5 @@ spec:
     - name: gateway
     - name: keycloak-namespace
     - name: keycloak-operator
+    - name: keycloak-db-grant
   timeout: 10m
