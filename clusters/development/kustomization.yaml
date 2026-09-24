@@ -17,6 +17,7 @@ resources:
   - external-secrets-operator-kustomization.yaml
   - external-secrets-crs-kustomization.yaml
   - velotime-namespace-kustomization.yaml
+  - velotime-db-grant-kustomization.yaml
   - keycloak-kustomization.yaml
   - velotime-secrets-kustomization.yaml
   - velotime-kustomization.yaml

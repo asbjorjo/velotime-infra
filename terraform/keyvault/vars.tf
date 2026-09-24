@@ -46,6 +46,11 @@ variable "database_port" {
   type        = string
 }
 
+variable "database_admin_database" {
+  description = "Database instance's admin maintenance database, stored in the vault as velotime-database-admin-database."
+  type        = string
+}
+
 variable "database_admin_username" {
   description = "Database admin username, stored in the vault as velotime-database-admin-username."
   type        = string

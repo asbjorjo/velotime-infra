@@ -1,18 +1,18 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: velotime
+  name: velotime-db-grant
   namespace: flux-system
 spec:
   interval: 1h
   retryInterval: 1m
-  path: ./clusters/development/velotime/helmrelease
+  path: ./clusters/development/velotime-db-grant
   prune: true
   wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: velotime-secrets
-    - name: velotime-db-grant
-  timeout: 10m
+    - name: external-secrets-crs
+    - name: velotime-namespace
+  timeout: 5m

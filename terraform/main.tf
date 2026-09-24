@@ -65,6 +65,7 @@ module "keyvault" {
 
   database_host           = module.database.database_host
   database_port           = module.database.database_port
+  database_admin_database = module.database.database_admin_database
   database_admin_username = module.database.database_admin_username
   database_admin_password = module.database.database_admin_password
   database_username       = module.database.database_username

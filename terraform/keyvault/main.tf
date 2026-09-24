@@ -95,6 +95,27 @@ resource "azurerm_key_vault_secret" "database_password" {
   depends_on   = [time_sleep.rbac_propagation]
 }
 
+resource "azurerm_key_vault_secret" "database_admin_database" {
+  name         = "velotime-database-admin-database"
+  value        = var.database_admin_database
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "database_admin_username" {
+  name         = "velotime-database-admin-user"
+  value        = var.database_admin_username
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
+resource "azurerm_key_vault_secret" "database_admin_password" {
+  name         = "velotime-database-admin-password"
+  value        = var.database_admin_password
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
 resource "azurerm_key_vault_secret" "keycloak_database_host" {
   name         = "keycloak-database-host"
   value        = var.keycloak_database_host
