@@ -9,6 +9,7 @@ resources:
   - gateway-kustomization.yaml
   - keycloak-namespace-kustomization.yaml
   - keycloak-operator-kustomization.yaml
+  - keycloak-db-grant-kustomization.yaml
   - external-dns-namespace-kustomization.yaml
   - external-dns-kustomization.yaml
   - external-secrets-kustomization.yaml

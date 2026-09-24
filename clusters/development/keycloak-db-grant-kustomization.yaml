@@ -1,12 +1,12 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: keycloak
+  name: keycloak-db-grant
   namespace: flux-system
 spec:
   interval: 1h
   retryInterval: 1m
-  path: ./clusters/development/keycloak
+  path: ./clusters/development/keycloak-db-grant
   prune: true
   wait: true
   sourceRef:
@@ -14,8 +14,5 @@ spec:
     name: flux-system
   dependsOn:
     - name: external-secrets-crs
-    - name: gateway
     - name: keycloak-namespace
-    - name: keycloak-operator
-    - name: keycloak-db-grant
-  timeout: 10m
+  timeout: 5m

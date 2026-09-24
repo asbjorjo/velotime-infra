@@ -47,3 +47,7 @@ output "keycloak_database_password" {
   value     = upcloud_managed_database_user.keycloak.password
   sensitive = true
 }
+
+output "database_admin_database" {
+  value = upcloud_managed_database_postgresql.instance.primary_database
+}

@@ -91,6 +91,23 @@ variable "keycloak_database_username" {
   sensitive   = true
 }
 
+variable "keycloak_database_admin_database" {
+  description = "Database instance's admin maintenance database, stored in the vault as keycloak-database-admin-database."
+  type        = string
+}
+
+variable "keycloak_database_admin_username" {
+  description = "Database instance admin/superuser username, stored in the vault as keycloak-database-admin-user."
+  type        = string
+  sensitive   = true
+}
+
+variable "keycloak_database_admin_password" {
+  description = "Database instance admin/superuser password, stored in the vault as keycloak-database-admin-password."
+  type        = string
+  sensitive   = true
+}
+
 variable "keycloak_database_password" {
   description = "Keycloak database password, stored in the vault as keycloak-database-password."
   type        = string
