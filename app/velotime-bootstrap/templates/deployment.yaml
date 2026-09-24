@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "velotime.fullname" . }}
+  labels:
+    {{- include "velotime.labels" . | nindent 4 }}
+    {{- with .Values.podLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.podAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.global.imagePullSecrets }}
+  imagePullSecrets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  containers:
+  - name: {{ .Chart.Name }}
+    image: "{{ .Values.global.image.repository }}{{ .Chart.Name }}:{{ .Values.global.image.tag }}"
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    {{- with .Values.ports }}
+    ports:
+      {{- toYaml . | nindent 4 }}
+    {{- end }}
+    envFrom:
+      {{- with .Values.configMap }}
+      {{- if .enabled }}
+      - configMapRef:
+          name: {{ include "velotime.fullname" $ }}
+      {{- end }}
+      {{- end }}
+      - secretRef:
+          name: {{ .Values.existingSecret | default (include "velotime.fullname" .) }}
+  initContainers:
+  {{- range .Values.migrations }}
+  - name: {{ $.Chart.Name }}-{{ . }}-migration
+    image: "{{ $.Values.global.image.repository }}velotime-module-{{ . }}-migration:{{ $.Values.global.image.tag }}"
+    imagePullPolicy: {{ $.Values.image.pullPolicy }}
+    envFrom:
+      {{- with $.Values.configMap }}
+      {{- if .enabled }}
+      - configMapRef:
+          name: {{ include "velotime.fullname" $ }}
+      {{- end }}
+      {{- end }}
+      - secretRef:
+          name: {{ $.Values.existingSecret | default (include "velotime.fullname" $) }}
+  {{- end -}}
