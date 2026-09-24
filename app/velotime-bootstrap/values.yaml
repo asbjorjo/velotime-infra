@@ -1,0 +1,22 @@
+global:
+  image:
+    repository: ghcr.io/asbjorjo/
+    tag: 3.0.0-alpha.27
+  imagePullSecrets:
+    - name: ghcr
+existingSecret: ""
+configMap:
+  enabled: true
+database:
+  host: postgres-service
+  port: 5432
+  user: velotime
+  password: ""
+migrations:
+  - facilities
+  - statistics
+  - timing
+image:
+  pullPolicy: Always
+podAnnotations:
+  instrumentation.opentelemetry.io/inject-dotnet: 'true'

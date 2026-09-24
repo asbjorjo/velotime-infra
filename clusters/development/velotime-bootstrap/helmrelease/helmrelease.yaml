@@ -1,0 +1,35 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: velotime-bootstrap
+  namespace: flux-system
+spec:
+  interval: 1h
+  releaseName: velotime-bootstrap
+  targetNamespace: velotime
+  storageNamespace: velotime
+  timeout: 10m
+  chart:
+    spec:
+      chart: ./app/velotime-bootstrap
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+      interval: 1h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    existingSecret: velotime-bootstrap
+    configMap:
+      enabled: false
+    global:
+      image:
+        repository: ghcr.io/asbjorjo/
+        tag: 3.0.0-alpha.27
+      imagePullSecrets:
+        - name: ghcr
