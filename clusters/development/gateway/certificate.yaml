@@ -10,5 +10,5 @@ spec:
     - development.veloti.me
     - auth.development.veloti.me
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-prod
     kind: ClusterIssuer
