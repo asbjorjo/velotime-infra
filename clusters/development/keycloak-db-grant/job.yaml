@@ -17,7 +17,7 @@ spec:
             - -v
             - ON_ERROR_STOP=1
             - -c
-            - GRANT ALL PRIVILEGES ON DATABASE "$(KEYCLOAK_DB_NAME)" TO "$(KEYCLOAK_DB_USER)";
+            - GRANT ALL PRIVILEGES ON SCHEMA public TO "$(KEYCLOAK_DB_USER)";
           env:
             - name: PGHOST
               valueFrom:
@@ -29,11 +29,6 @@ spec:
                 secretKeyRef:
                   name: keycloak-db-secret
                   key: port
-            - name: KEYCLOAK_DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-db-secret
-                  key: database
             - name: KEYCLOAK_DB_USER
               valueFrom:
                 secretKeyRef:
@@ -42,7 +37,7 @@ spec:
             - name: PGDATABASE
               valueFrom:
                 secretKeyRef:
-                  name: keycloak-db-admin-secret
+                  name: keycloak-db-secret
                   key: database
             - name: PGUSER
               valueFrom:
