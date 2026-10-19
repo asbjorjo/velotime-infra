@@ -1,18 +1,18 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: velotime-bootstrap-secrets
+  name: velotime
   namespace: flux-system
 spec:
   interval: 1h
   retryInterval: 1m
-  path: ./clusters/development/velotime-bootstrap/secrets
+  path: ./clusters/development/velotime
   prune: true
   wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
   dependsOn:
-    - name: external-secrets-crs
-    - name: velotime-namespace
+    - name: velotime-secrets
+    - name: velotime-db-grant
   timeout: 10m
