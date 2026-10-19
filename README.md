@@ -28,7 +28,7 @@ Configure the following variables in each Terraform GitHub Environment (`develop
 - `AZURE_TENANT_ID`: Azure AD tenant ID for that service principal.
 - `AZURE_ESO_OBJECT_ID`: Azure AD object ID (not client ID) of the External Secrets service principal (`AZURE_CLIENT_ID` below), granted read-only access to the Key Vault created by `terraform/keyvault`.
 
-The `flux-bootstrap` workflow additionally accepts `AZURE_CLIENT_ID`, the non-sensitive client ID used by the `external-secrets` `azure-keyvault` `ClusterSecretStore` (see `clusters/<environment>/external-secrets/crs/clustersecretstore.yaml`). When it is unset, `flux-bootstrap` skips creating the `external-secrets-azure-config` authentication Secret in `flux-system`. This service principal needs permission to read secrets from the configured Key Vault.
+The `flux-bootstrap` workflow additionally accepts `AZURE_CLIENT_ID`, the non-sensitive client ID used by the `external-secrets` `azure-keyvault` `ClusterSecretStore` (see [`clusters/development/external-secrets-crs/clustersecretstore.yaml`](clusters/development/external-secrets-crs/clustersecretstore.yaml)). When it is unset, `flux-bootstrap` skips creating the `external-secrets-azure-config` authentication Secret in `flux-system`. This service principal needs permission to read secrets from the configured Key Vault.
 
 ### Secrets
 
@@ -88,3 +88,17 @@ allowing the runner's IP through the cluster's control-plane IP filter with
 name is assumed to follow the `<basename>-cluster` convention used by the `cluster` module. The
 `flux-bootstrap-apply.yml` workflow is called by the `terraform-apply.yml` ("OpenTofu Deploy")
 workflow after each environment's core `tofu apply` succeeds.
+
+### Development manifests
+
+Each Flux Kustomization has its own directory under [`clusters/development/`](clusters/development/).
+The directory contains `flux-kustomization.yaml` (the Flux reconciliation definition) and,
+for local resources, `kustomization.yaml` plus the manifests and patches it builds.
+The [development root](clusters/development/kustomization.yaml) includes only the Flux
+definitions and the FluxInstance, not the component resource builds. Keep
+`flux-kustomization.yaml` out of each component's `kustomization.yaml` to avoid
+self-reconciliation. Components sourced from upstream Git repositories keep their
+upstream paths and any associated source definition in their component directory.
+
+Validate the root with `kubectl kustomize clusters/development`, and validate local
+components separately with `kubectl kustomize clusters/development/<component>`.

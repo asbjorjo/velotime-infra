@@ -2,24 +2,25 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - flux-system/flux-instance.yaml
-  - gateway-api-crds.yaml
-  - cilium-kustomization.yaml
-  - cert-manager-kustomization.yaml
-  - cert-manager-issuer-kustomization.yaml
-  - gateway-kustomization.yaml
-  - keycloak-namespace-kustomization.yaml
-  - keycloak-operator-kustomization.yaml
-  - keycloak-db-grant-kustomization.yaml
-  - external-dns-namespace-kustomization.yaml
-  - external-dns-kustomization.yaml
-  - external-secrets-kustomization.yaml
-  - external-secrets-crds-kustomization.yaml
-  - external-secrets-operator-kustomization.yaml
-  - external-secrets-crs-kustomization.yaml
-  - velotime-namespace-kustomization.yaml
-  - velotime-db-grant-kustomization.yaml
-  - velotime-bootstrap-secrets-kustomization.yaml
-  - velotime-bootstrap-kustomization.yaml
-  - keycloak-kustomization.yaml
-  - velotime-secrets-kustomization.yaml
-  - velotime-kustomization.yaml
+  - gateway-api-crds/flux-kustomization.yaml
+  - cilium/flux-kustomization.yaml
+  - cert-manager/flux-kustomization.yaml
+  - cert-manager-issuer/flux-kustomization.yaml
+  - gateway/flux-kustomization.yaml
+  - keycloak-namespace/flux-kustomization.yaml
+  - keycloak-operator/flux-kustomization.yaml
+  - keycloak-db-grant/flux-kustomization.yaml
+  - external-dns-namespace/flux-kustomization.yaml
+  - external-dns/flux-kustomization.yaml
+  - external-secrets/flux-kustomization.yaml
+  - external-secrets-crds/flux-kustomization.yaml
+  - external-secrets-operator/flux-kustomization.yaml
+  - external-secrets-crs/flux-kustomization.yaml
+  - velotime-namespace/flux-kustomization.yaml
+  - velotime-db-grant/flux-kustomization.yaml
+  - velotime-bootstrap-secrets/flux-kustomization.yaml
+  - velotime-bootstrap/flux-kustomization.yaml
+  - keycloak/flux-kustomization.yaml
+  - velotime-secrets/flux-kustomization.yaml
+  - velotime/flux-kustomization.yaml
+  - velotime-migration/flux-kustomization.yaml
