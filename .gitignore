@@ -6,3 +6,5 @@ dill
 charts
 !app/velotime/charts/
 !app/velotime/charts/*.tgz
+!app/velotime-migration/charts/
+!app/velotime-migration/charts/*.tgz
