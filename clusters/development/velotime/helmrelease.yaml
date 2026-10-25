@@ -39,6 +39,7 @@ spec:
       configMap:
         enabled: false
     module-statistics-processor:
+      replicaCount: 0
       existingSecret: module-statistics-processor
       configMap:
         enabled: true
@@ -47,6 +48,7 @@ spec:
       configMap:
         enabled: false
     module-timing-processor:
+      replicaCount: 0
       existingSecret: module-timing-processor
       configMap:
         enabled: false
