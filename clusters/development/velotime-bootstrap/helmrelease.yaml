@@ -11,7 +11,7 @@ spec:
   timeout: 10m
   chart:
     spec:
-      chart: ./app/velotime-bootstrap
+      chart: ./charts/velotime-bootstrap
       sourceRef:
         kind: GitRepository
         name: velotime
