@@ -17,6 +17,7 @@ spec:
         name: velotime
         namespace: flux-system
       interval: 1h
+      reconcileStrategy: "Revision"
   install:
     remediation:
       retries: 3
