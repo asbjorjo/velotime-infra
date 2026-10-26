@@ -14,7 +14,7 @@ spec:
       chart: ./app/velotime
       sourceRef:
         kind: GitRepository
-        name: flux-system
+        name: velotime
         namespace: flux-system
       interval: 1h
   install:
