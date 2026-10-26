@@ -29,6 +29,7 @@ spec:
         repository: ghcr.io/asbjorjo/
       imagePullSecrets:
         - name: ghcr
+      oidcAudience: https://development.veloti.me
     module-facilities-api:
       existingSecret: module-facilities-api
       configMap:
