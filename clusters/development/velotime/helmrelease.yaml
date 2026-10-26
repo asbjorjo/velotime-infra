@@ -14,7 +14,7 @@ spec:
       chart: ./app/velotime
       sourceRef:
         kind: GitRepository
-        name: flux-system
+        name: velotime
         namespace: flux-system
       interval: 1h
   install:
@@ -27,7 +27,6 @@ spec:
     global:
       image:
         repository: ghcr.io/asbjorjo/
-        tag: 3.0.0-alpha.66
       imagePullSecrets:
         - name: ghcr
     module-facilities-api:
