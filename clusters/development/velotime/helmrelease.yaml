@@ -32,30 +32,18 @@ spec:
       oidcAudience: https://development.veloti.me
     module-facilities-api:
       existingSecret: module-facilities-api
-      configMap:
-        enabled: false
     module-statistics-api:
       existingSecret: module-statistics-api
-      configMap:
-        enabled: false
     module-statistics-processor:
       replicaCount: 0
       existingSecret: module-statistics-processor
-      configMap:
-        enabled: true
     module-timing-api:
       existingSecret: module-timing-api
-      configMap:
-        enabled: false
     module-timing-processor:
       replicaCount: 0
       existingSecret: module-timing-processor
-      configMap:
-        enabled: false
     webui:
       existingSecret: webui
-      configMap:
-        enabled: true
       httpRoute:
         parentRefs:
           - name: gateway
