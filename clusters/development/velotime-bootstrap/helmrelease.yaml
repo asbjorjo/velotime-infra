@@ -26,8 +26,6 @@ spec:
       retries: 3
   values:
     existingSecret: velotime-bootstrap
-    configMap:
-      enabled: false
     global:
       image:
         repository: ghcr.io/asbjorjo/
