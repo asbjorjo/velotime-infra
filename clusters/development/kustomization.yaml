@@ -6,6 +6,7 @@ resources:
   - cilium/flux-kustomization.yaml
   - cert-manager/flux-kustomization.yaml
   - cert-manager-issuer/flux-kustomization.yaml
+  - opentelemetry-operator/flux-kustomization.yaml
   - gateway/flux-kustomization.yaml
   - keycloak-namespace/flux-kustomization.yaml
   - keycloak-operator/flux-kustomization.yaml
