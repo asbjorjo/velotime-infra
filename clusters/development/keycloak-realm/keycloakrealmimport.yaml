@@ -58,20 +58,15 @@ spec:
       - roles
       - web-origins
       - basic
-      - velotime:all
+      - velotime-web
     defaultOptionalClientScopes:
       - offline_access
     scopeMappings:
-      - clientScope: velotime:all
+      - clientScope: velotime-web
         roles:
           - user
-          - velotime-admin
-          - facilities-admin
-          - timing-admin
-          - statistics-admin
-          - velotime-users-migration
     clientScopes:
-      - name: velotime:all
+      - name: velotime-web
         description: VeloTime API audience, subject and permission claims
         protocol: openid-connect
         attributes:
