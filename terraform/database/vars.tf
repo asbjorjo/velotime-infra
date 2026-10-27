@@ -9,9 +9,27 @@ variable "zone" {
   type        = string
 }
 
-variable "plan" {
-  default     = "1x1xCPU-1GB-10GB"
-  description = "UpCloud plan for the database instance."
+variable "plan_compute" {
+  default     = "rdb.development.1CPU-1GB"
+  description = "UpCloud compute shape for the database instance."
+  type        = string
+}
+
+variable "plan_node_count" {
+  default     = 1
+  description = "Number of nodes in the database plan."
+  type        = number
+}
+
+variable "plan_storage_gib" {
+  default     = 10
+  description = "Database storage per node in GiB."
+  type        = number
+}
+
+variable "plan_backups" {
+  default     = "mini"
+  description = "Backup tier for the database plan."
   type        = string
 }
 
