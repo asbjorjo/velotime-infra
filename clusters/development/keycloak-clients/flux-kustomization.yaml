@@ -13,11 +13,11 @@ spec:
     - apiVersion: k8s.keycloak.org/v2alpha1
       kind: KeycloakOIDCClient
       failed: >-
-        has(status) && has(status.observedGeneration) &&
+        has(status.observedGeneration) &&
         status.observedGeneration == metadata.generation && has(status.conditions) &&
         status.conditions.exists(condition, condition.type == 'HasErrors' && condition.status == 'True')
       current: >-
-        has(status) && has(status.observedGeneration) &&
+        has(status.observedGeneration) &&
         status.observedGeneration == metadata.generation &&
         has(status.uuid) && status.uuid != '' && has(status.hash) && status.hash != '' &&
         has(status.conditions) &&
