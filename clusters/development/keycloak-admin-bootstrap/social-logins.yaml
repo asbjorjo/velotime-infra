@@ -1,0 +1,91 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: keycloak-social-logins
+  namespace: keycloak
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: azure-keyvault
+  target:
+    name: keycloak-social-logins
+    creationPolicy: Owner
+  data:
+    - secretKey: google-client-id
+      remoteRef:
+        key: keycloak-google-client-id
+    - secretKey: google-client-secret
+      remoteRef:
+        key: keycloak-google-client-secret
+    - secretKey: facebook-client-id
+      remoteRef:
+        key: keycloak-facebook-client-id
+    - secretKey: facebook-client-secret
+      remoteRef:
+        key: keycloak-facebook-client-secret
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: keycloak-social-logins
+  namespace: keycloak
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 240
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 240
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: reconcile
+              image: python:3.13.9-alpine3.22
+              command:
+                - python3
+                - -B
+                - /scripts/social_logins.py
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: operator-credentials
+                  mountPath: /credentials/operator
+                  readOnly: true
+                - name: social-credentials
+                  mountPath: /credentials/social
+                  readOnly: true
+          volumes:
+            - name: scripts
+              configMap:
+                name: keycloak-admin-bootstrap
+            - name: operator-credentials
+              secret:
+                secretName: keycloak-admin
+            - name: social-credentials
+              secret:
+                secretName: keycloak-social-logins

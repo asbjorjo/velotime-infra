@@ -14,6 +14,7 @@ OPERATOR_ROLES = (
     "manage-users",
     "view-users",
     "manage-realm",
+    "manage-identity-providers",
 )
 
 
@@ -86,6 +87,7 @@ def verify_operator(api, account):
         api.request("GET", f"/admin/api/{REALM}/clients/v2", token)
         api.request("GET", f"/admin/realms/{REALM}/roles", token)
         api.request("GET", f"/admin/realms/{REALM}/users?max=1", token)
+        api.request("GET", f"/admin/realms/{REALM}/identity-provider/instances", token)
     except APIError as error:
         if error.status in (401, 403):
             return False
