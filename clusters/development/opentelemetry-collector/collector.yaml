@@ -1,0 +1,28 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: telemetry
+  namespace: opentelemetry-operator-system
+spec:
+  mode: deployment
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+    exporters:
+      otlp:
+        endpoint: monitor.ajjg.no:4317
+    service:
+      pipelines:
+        metrics:
+          receivers:
+            - otlp
+          exporters:
+            - otlp
+        traces:
+          receivers:
+            - otlp
+          exporters:
+            - otlp
