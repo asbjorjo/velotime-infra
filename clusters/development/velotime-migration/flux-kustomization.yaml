@@ -16,5 +16,5 @@ spec:
     - name: velotime-secrets
     - name: velotime-db-grant
     - name: velotime-bootstrap
-    - name: keycloak
+    - name: keycloak-clients
   timeout: 10m

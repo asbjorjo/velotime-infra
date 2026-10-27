@@ -39,6 +39,32 @@ resource "time_sleep" "rbac_propagation" {
   create_duration = "30s"
 }
 
+resource "random_password" "keycloak_client" {
+  for_each = toset([
+    "keycloak-bootstrap-admin-client-secret",
+    "keycloak-operator-client-secret",
+    "velotime-migration-users-secret",
+    "velotime-statistics-secret",
+    "velotime-timing-secret",
+  ])
+
+  length  = 32
+  special = false
+}
+
+resource "azurerm_key_vault_secret" "keycloak_client" {
+  for_each = toset(keys(random_password.keycloak_client))
+
+  name         = each.key
+  value        = random_password.keycloak_client[each.key].result
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
 resource "azurerm_key_vault_secret" "cache_host" {
   name         = "velotime-cache-host"
   value        = var.cache_host

@@ -1,0 +1,19 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: KeycloakOIDCClient
+metadata:
+  name: velotime.timing.processor
+  namespace: keycloak
+spec:
+  keycloakCRName: keycloak
+  realm: velotime
+  client:
+    displayName: VeloTime Timing Processor
+    enabled: true
+    loginFlows:
+      - SERVICE_ACCOUNT
+    auth:
+      method: client-secret
+      secretRef:
+        name: keycloak-realm-client-secrets
+        key: timing-processor
+    serviceAccountRoles: []

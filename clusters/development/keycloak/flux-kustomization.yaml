@@ -18,4 +18,5 @@ spec:
     - name: keycloak-namespace
     - name: keycloak-operator
     - name: keycloak-db-grant
+    - name: keycloak-realm-secrets
   timeout: 10m

@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-admin-bootstrap
+  namespace: keycloak
+  annotations:
+    kustomize.toolkit.fluxcd.io/force: enabled
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 540
+  template:
+    spec:
+      automountServiceAccountToken: false
+      restartPolicy: OnFailure
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bootstrap
+          image: python:3.13.9-alpine3.22
+          command:
+            - python3
+            - -B
+            - /scripts/bootstrap.py
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: bootstrap-credentials
+              mountPath: /credentials/bootstrap
+              readOnly: true
+            - name: operator-credentials
+              mountPath: /credentials/operator
+              readOnly: true
+      volumes:
+        - name: scripts
+          configMap:
+            name: keycloak-admin-bootstrap
+        - name: bootstrap-credentials
+          secret:
+            secretName: keycloak-bootstrap-admin
+        - name: operator-credentials
+          secret:
+            secretName: keycloak-admin

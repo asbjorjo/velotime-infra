@@ -1,0 +1,20 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: KeycloakOIDCClient
+metadata:
+  name: velotime.users.migration
+  namespace: keycloak
+spec:
+  keycloakCRName: keycloak
+  realm: velotime
+  client:
+    displayName: VeloTime Users Migration
+    enabled: true
+    loginFlows:
+      - SERVICE_ACCOUNT
+    auth:
+      method: client-secret
+      secretRef:
+        name: keycloak-realm-client-secrets
+        key: users-migration
+    serviceAccountRoles:
+      - velotime-users-migration

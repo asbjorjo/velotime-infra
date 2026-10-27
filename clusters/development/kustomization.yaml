@@ -12,6 +12,10 @@ resources:
   - keycloak-namespace/flux-kustomization.yaml
   - keycloak-operator/flux-kustomization.yaml
   - keycloak-db-grant/flux-kustomization.yaml
+  - keycloak-realm-secrets/flux-kustomization.yaml
+  - keycloak-realm/flux-kustomization.yaml
+  - keycloak-admin-bootstrap/flux-kustomization.yaml
+  - keycloak-clients/flux-kustomization.yaml
   - external-dns-namespace/flux-kustomization.yaml
   - external-dns/flux-kustomization.yaml
   - external-secrets/flux-kustomization.yaml

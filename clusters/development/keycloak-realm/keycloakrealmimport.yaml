@@ -1,0 +1,130 @@
+apiVersion: k8s.keycloak.org/v2beta1
+kind: KeycloakRealmImport
+metadata:
+  name: velotime
+  namespace: keycloak
+spec:
+  keycloakCRName: keycloak
+  realm:
+    realm: velotime
+    enabled: true
+    displayName: VeloTime Realm
+    attributes:
+      CreateDefaultClientScopes: "true"
+    sslRequired: external
+    registrationAllowed: true
+    registrationEmailAsUsername: false
+    rememberMe: true
+    verifyEmail: false
+    loginWithEmailAllowed: true
+    duplicateEmailsAllowed: false
+    resetPasswordAllowed: true
+    editUsernameAllowed: false
+    bruteForceProtected: true
+    permanentLockout: false
+    maxFailureWaitSeconds: 900
+    minimumQuickLoginWaitSeconds: 60
+    waitIncrementSeconds: 60
+    quickLoginCheckMilliSeconds: 1000
+    maxDeltaTimeSeconds: 43200
+    failureFactor: 30
+    accessTokenLifespan: 300
+    roles:
+      realm:
+        - name: user
+          description: User role
+        - name: velotime-admin
+          description: Administrator for all VeloTime modules
+        - name: facilities-admin
+          description: Facilities administrator
+        - name: timing-admin
+          description: Timing and transponder ownership administrator
+        - name: statistics-admin
+          description: Statistics definitions administrator
+        - name: velotime-users-migration
+          description: Import users and their timing and statistics records
+          composite: true
+          composites:
+            realm:
+              - timing-admin
+              - statistics-admin
+            client:
+              realm-management:
+                - query-users
+                - manage-users
+    defaultDefaultClientScopes:
+      - profile
+      - email
+      - roles
+      - web-origins
+      - basic
+      - velotime:all
+    defaultOptionalClientScopes:
+      - offline_access
+    scopeMappings:
+      - clientScope: velotime:all
+        roles:
+          - user
+          - velotime-admin
+          - facilities-admin
+          - timing-admin
+          - statistics-admin
+          - velotime-users-migration
+    clientScopes:
+      - name: velotime:all
+        description: VeloTime API audience, subject and permission claims
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "false"
+        protocolMappers:
+          - name: velotime-audience
+            protocol: openid-connect
+            protocolMapper: oidc-audience-mapper
+            config:
+              included.custom.audience: https://development.veloti.me
+              id.token.claim: "false"
+              access.token.claim: "true"
+          - name: velotime-subject
+            protocol: openid-connect
+            protocolMapper: oidc-sub-mapper
+            config:
+              access.token.claim: "true"
+              introspection.token.claim: "true"
+          - name: realm roles
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-realm-role-mapper
+            config:
+              multivalued: "true"
+              userinfo.token.claim: "true"
+              id.token.claim: "true"
+              access.token.claim: "true"
+              claim.name: realm_access.roles
+              jsonType.label: String
+          - name: client roles
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-client-role-mapper
+            config:
+              multivalued: "true"
+              id.token.claim: "false"
+              access.token.claim: "true"
+              claim.name: resource_access.${client_id}.roles
+              jsonType.label: String
+    clientProfiles:
+      profiles:
+        - name: velotime-public-pkce
+          executors:
+            - executor: pkce-enforcer
+              configuration:
+                auto-configure: true
+    clientPolicies:
+      policies:
+        - name: velotime-public-pkce
+          enabled: true
+          conditions:
+            - condition: client-access-type
+              configuration:
+                type:
+                  - public
+          profiles:
+            - velotime-public-pkce
