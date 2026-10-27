@@ -19,6 +19,7 @@ resources:
   - external-secrets-operator/flux-kustomization.yaml
   - external-secrets-crs/flux-kustomization.yaml
   - velotime-namespace/flux-kustomization.yaml
+  - velotime-instrumentation/flux-kustomization.yaml
   - velotime-db-grant/flux-kustomization.yaml
   - velotime-bootstrap-secrets/flux-kustomization.yaml
   - velotime-bootstrap/flux-kustomization.yaml

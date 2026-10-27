@@ -1,0 +1,11 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: default
+  namespace: velotime
+spec:
+  exporter:
+    endpoint: http://telemetry-collector.velotime-instrumentation.svc.cluster.local:4318
+  propagators:
+    - tracecontext
+    - baggage
