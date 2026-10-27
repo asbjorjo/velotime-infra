@@ -102,3 +102,115 @@ upstream paths and any associated source definition in their component directory
 
 Validate the root with `kubectl kustomize clusters/development`, and validate local
 components separately with `kubectl kustomize clusters/development/<component>`.
+
+### Development Keycloak Realm And Clients
+
+The development realm is initialized by
+[`keycloak-realm`](clusters/development/keycloak-realm/keycloakrealmimport.yaml).
+It imports realm settings, roles, shared token scopes and a public-client PKCE policy,
+but no users or client definitions. The baseline is the application's
+[`velotime-realm.json`](https://github.com/asbjorjo/VeloTimer/blob/8e5b046df98666355d2351e157e794854b79135b/config/keycloak/realms/velotime-realm.json),
+without its test account or wildcard redirects. Built-in scopes are explicitly
+preserved alongside `velotime:all`; the shared scope supplies the exact API audience
+`https://development.veloti.me`, subject, realm roles and client-role claims even
+when a service requests a token without specifying scopes.
+
+[`keycloak-clients`](clusters/development/keycloak-clients/kustomization.yaml)
+manages clients separately using the operator's `KeycloakOIDCClient` v2alpha1 API.
+The pinned Keycloak/operator release is `26.7.4`. Client management requires the
+**experimental** `client-admin-api:v2` feature, enabled in the Keycloak CR.
+
+| Client ID | Flow | Vault Secret |
+| --- | --- | --- |
+| `velotime.webui` | Public authorization code with S256 PKCE | None |
+| `velotime.users.migration` | Client credentials | `velotime-migration-users-secret` |
+| `velotime.statistics.processor` | Client credentials | `velotime-statistics-secret` |
+| `velotime.timing.processor` | Client credentials | `velotime-timing-secret` |
+
+The WebUI only allows `https://development.veloti.me/signin-oidc` and
+`https://development.veloti.me/signout-callback-oidc` redirects, with
+`https://development.veloti.me` as its web origin. Its authority is
+`https://auth.development.veloti.me/realms/velotime`. Implicit and password grants
+are disabled. Processor accounts receive no administrator roles. The migration
+account receives the `velotime-users-migration` composite realm role, combining
+`timing-admin`, `statistics-admin`, and the `realm-management` client's
+`query-users`/`manage-users` roles. These grants do not make ordinary users admins.
+Social identity providers and SMTP are not provisioned here; configure any required
+providers before migrating users with linked external accounts.
+
+#### First Deployment Prerequisites
+
+Populate all three application client secrets above and these two additional,
+independent random secrets in the development Azure Key Vault before reconciling:
+
+- `keycloak-bootstrap-admin-client-secret`: temporary master-realm bootstrap service account.
+- `keycloak-operator-client-secret`: permanent operator service account.
+
+`keycloak-realm-secrets` mirrors these values into the `keycloak` namespace.
+The bootstrap and permanent Kubernetes Secrets are `keycloak-bootstrap-admin`
+and `keycloak-admin`, with fixed client IDs `velotime-bootstrap-admin` and
+`velotime-operator` respectively. The operator reads `client-id`/`client-secret`
+from `keycloak-admin`. Application workloads keep their existing secrets in
+the `velotime` namespace; no secret values are committed to Git.
+
+**This automatic bootstrap requires a new Keycloak database without a master realm.**
+`spec.bootstrapAdmin.service` is ignored once the master realm exists. Do not delete
+or reset an existing database to satisfy this requirement; use a separately reviewed
+admin recovery/provisioning procedure for an already-initialized installation.
+
+Flux applies `keycloak-realm-secrets`, then Keycloak, then the realm import, then
+`keycloak-admin-bootstrap`, then `keycloak-clients`. Application deployment and
+migration wait for successful client reconciliation. The bootstrap Job uses the
+temporary account to create the permanent account in `master`, granting only the
+Velotime management client's `manage-clients`, `view-clients`, `manage-users`,
+`view-users`, and `manage-realm` roles. It grants no master-realm administration
+or permission to create other realms. It verifies permanent API access before
+deleting the temporary account. A retry works after cleanup using permanent
+credentials; failed verification retains temporary access. Retained completed
+Jobs are not periodically rerun. A changed bootstrap script replaces its Job via
+the Flux force annotation; it must remain idempotent.
+
+The operator account is not a human master administrator. Establish an independent,
+secure recovery procedure before removing bootstrap access. If master administration
+is later needed, follow Keycloak's
+[admin recovery guide](https://www.keycloak.org/server/bootstrap-admin-recovery);
+the recovery command requires all Keycloak nodes to be stopped.
+
+#### Reconciliation And Verification
+
+`KeycloakRealmImport` creates a realm only once: edits do not update an existing
+realm or delete it. Keep the import CR managed by Flux to retain its completion
+status and avoid recreating a tracked resource through manual cleanup. Changes to
+realm settings, policies, scopes or composite roles after import need a separately
+reviewed update procedure, not a realm deletion/reimport.
+
+Client CR changes are reconciled by the operator. Referenced client secrets are
+polled, allowing vault-backed secret rotation; coordinate this with the existing
+application ExternalSecrets' one-hour refresh and workload restarts. Do not rotate
+secrets in the Admin UI or mutate operator-managed clients through the Admin API.
+The operator does not continuously detect external edits. **Removing a client CR
+from Git deletes the live Keycloak client through Flux pruning and its finalizer.**
+
+The permanent operator credential is different: changing its vault secret alone
+does not rotate its master-realm client. The completed bootstrap Job does not run
+on secret refresh. Coordinate that credential's rotation using an authorized admin
+session, the vault value, and the operator; never remove the last working credential.
+Keep the bootstrap secret available for retry mounts, but its deleted account
+cannot authenticate. Changing it will not recreate an account in an existing master realm.
+
+Run the bootstrap safety tests with:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s clusters/development/keycloak-admin-bootstrap -p '*_test.py' -v
+```
+
+Build the four new components separately as well as the development root. After
+deployment to the explicitly selected development context, verify ExternalSecrets
+are Ready, the realm import reports `Done=True`, the bootstrap Job is Complete,
+and every client reports current `observedGeneration`, nonempty `uuid`/`hash`, and
+`HasErrors=False`. The Flux health expressions reject missing or stale client status.
+Check realm discovery at
+`https://auth.development.veloti.me/realms/velotime/.well-known/openid-configuration`,
+then test WebUI login/logout and fresh service tokens' exact issuer, audience,
+subject and permitted/forbidden API operations. Never print secrets or tokens in
+logs, and do not run user-data migrations solely as an authentication test.

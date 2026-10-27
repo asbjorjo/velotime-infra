@@ -13,6 +13,7 @@ spec:
     kind: GitRepository
     name: flux-system
   dependsOn:
+    - name: keycloak-clients
     - name: velotime-secrets
     - name: velotime-db-grant
     - name: velotime-instrumentation
