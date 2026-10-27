@@ -28,6 +28,8 @@ spec:
     admissionWebhooks:
       certManager:
         enabled: true
+    crds:
+      create: true
     manager:
       image:
         tag: "0.162.0"

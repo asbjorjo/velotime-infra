@@ -15,4 +15,5 @@ spec:
   dependsOn:
     - name: velotime-secrets
     - name: velotime-db-grant
+    - name: velotime-instrumentation
   timeout: 10m

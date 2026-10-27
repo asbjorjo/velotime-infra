@@ -2,7 +2,7 @@ apiVersion: opentelemetry.io/v1beta1
 kind: OpenTelemetryCollector
 metadata:
   name: telemetry
-  namespace: opentelemetry-operator-system
+  namespace: velotime-instrumentation
 spec:
   mode: deployment
   config:
@@ -11,6 +11,8 @@ spec:
         protocols:
           grpc:
             endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
     exporters:
       otlp:
         endpoint: monitor.ajjg.no:4317
