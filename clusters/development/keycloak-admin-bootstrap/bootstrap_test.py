@@ -83,6 +83,25 @@ class BootstrapTests(unittest.TestCase):
         with self.assertRaises(bootstrap.APIError):
             bootstrap.authenticate(self.api, self.permanent)
 
+    @patch("bootstrap.authenticate", return_value="operator-token")
+    @patch("builtins.print")
+    def test_missing_realm_reports_endpoint_and_status_without_token(self, output, authenticate):
+        self.api.request.side_effect = bootstrap.APIError(404)
+        with self.assertRaises(bootstrap.APIError):
+            bootstrap.verify_operator(self.api, self.permanent)
+        messages = str(output.call_args_list)
+        self.assertIn("/admin/api/velotime/clients/v2", messages)
+        self.assertIn("HTTP 404", messages)
+        self.assertNotIn("operator-token", messages)
+        self.assertNotIn("permanent-value", messages)
+
+    @patch("bootstrap.bootstrap", side_effect=bootstrap.APIError(403))
+    @patch("bootstrap.credentials", return_value={})
+    @patch("builtins.print")
+    def test_main_reports_api_status(self, output, credentials, provision):
+        self.assertEqual(bootstrap.main(), 1)
+        self.assertIn("HTTP 403", str(output.call_args_list))
+
     @patch("bootstrap.credentials", side_effect=RuntimeError("sensitive-value"))
     @patch("builtins.print")
     def test_errors_do_not_log_sensitive_details(self, output, credentials):

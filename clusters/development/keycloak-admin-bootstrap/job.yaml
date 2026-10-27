@@ -11,7 +11,7 @@ spec:
   template:
     spec:
       automountServiceAccountToken: false
-      restartPolicy: OnFailure
+      restartPolicy: Never
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
@@ -23,8 +23,10 @@ spec:
           image: python:3.13.9-alpine3.22
           command:
             - python3
+            - -u
             - -B
             - /scripts/bootstrap.py
+          terminationMessagePolicy: FallbackToLogsOnError
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

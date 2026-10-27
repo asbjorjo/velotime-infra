@@ -80,18 +80,25 @@ def find_client(api, token, client_id):
 
 
 def verify_operator(api, account):
+    print("Authenticating permanent operator.", flush=True)
     token = authenticate(api, account)
     if token is None:
+        print("Permanent operator authentication was rejected.", file=sys.stderr, flush=True)
         return False
-    try:
-        api.request("GET", f"/admin/api/{REALM}/clients/v2", token)
-        api.request("GET", f"/admin/realms/{REALM}/roles", token)
-        api.request("GET", f"/admin/realms/{REALM}/users?max=1", token)
-        api.request("GET", f"/admin/realms/{REALM}/identity-provider/instances", token)
-    except APIError as error:
-        if error.status in (401, 403):
-            return False
-        raise
+    for path in (
+        f"/admin/api/{REALM}/clients/v2",
+        f"/admin/realms/{REALM}/roles",
+        f"/admin/realms/{REALM}/users?max=1",
+        f"/admin/realms/{REALM}/identity-provider/instances",
+    ):
+        print(f"Verifying operator access: GET {path}", flush=True)
+        try:
+            api.request("GET", path, token)
+        except APIError as error:
+            print(f"Operator access check failed (HTTP {error.status}).", file=sys.stderr, flush=True)
+            if error.status in (401, 403):
+                return False
+            raise
     return True
 
 
@@ -99,13 +106,16 @@ def bootstrap(api, temporary, permanent):
     if temporary["client-id"] == permanent["client-id"]:
         raise RuntimeError("Bootstrap and permanent client IDs must differ")
     permanent_ready = verify_operator(api, permanent)
+    print("Checking temporary bootstrap access.", flush=True)
     token = authenticate(api, temporary)
     if token is None:
         if permanent_ready:
             return
+        print("Neither temporary bootstrap nor permanent operator access is available.", file=sys.stderr, flush=True)
         raise RuntimeError("Neither bootstrap nor permanent operator access is available")
 
     if not permanent_ready:
+        print("Provisioning permanent operator and realm management roles.", flush=True)
         client = find_client(api, token, permanent["client-id"])
         payload = {
             "clientId": permanent["client-id"],
@@ -152,17 +162,22 @@ def bootstrap(api, temporary, permanent):
         raise RuntimeError("Permanent operator verification failed; bootstrap access retained")
     client = find_client(api, token, temporary["client-id"])
     if client is not None:
+        print("Removing temporary bootstrap account after successful verification.", flush=True)
         api.request("DELETE", f"/admin/realms/master/clients/{client['id']}", token)
 
 
 def main():
+    print("Starting Keycloak operator bootstrap.", flush=True)
     try:
         bootstrap(
             KeycloakAPI(),
             credentials("/credentials/bootstrap"),
             credentials("/credentials/operator"),
         )
-    except (APIError, URLError, OSError, RuntimeError, ValueError, KeyError):
+    except APIError as error:
+        print(f"Operator bootstrap failed (HTTP {error.status}); check the preceding access check, realm existence and permissions.", file=sys.stderr)
+        return 1
+    except (URLError, OSError, RuntimeError, ValueError, KeyError):
         print("Operator bootstrap failed; check connectivity, credentials and realm readiness.", file=sys.stderr)
         return 1
     print("Permanent operator access verified; temporary bootstrap account removed.")

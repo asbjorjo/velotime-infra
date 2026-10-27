@@ -250,6 +250,19 @@ is later needed, follow Keycloak's
 [admin recovery guide](https://www.keycloak.org/server/bootstrap-admin-recovery);
 the recovery command requires all Keycloak nodes to be stopped.
 
+The bootstrap Job uses separate Pods for retries (`restartPolicy: Never`) so
+failed attempts retain their logs until the Job is replaced or deleted. Python
+output is unbuffered; progress logs identify each access check and report HTTP
+status without credentials or response bodies. Inspect failures with
+`kubectl -n keycloak get pods -l job-name=keycloak-admin-bootstrap` and
+`kubectl -n keycloak logs <pod-name>`. A failed Job is terminal; Flux's force
+annotation replaces it when its pod template changes, not on every reconciliation.
+If realm endpoints return 404 while the import CR still reports `Done=True`,
+verify realm discovery directly: the import completion flag does not detect a
+realm deleted after import. Restore or recreate that realm only through a
+separately reviewed recovery procedure; restarting bootstrap does not restore
+realm data.
+
 #### Reconciliation And Verification
 
 `KeycloakRealmImport` creates a realm only once: edits do not update an existing
