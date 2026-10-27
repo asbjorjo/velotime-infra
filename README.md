@@ -137,8 +137,59 @@ are disabled. Processor accounts receive no administrator roles. The migration
 account receives the `velotime-users-migration` composite realm role, combining
 `timing-admin`, `statistics-admin`, and the `realm-management` client's
 `query-users`/`manage-users` roles. These grants do not make ordinary users admins.
-Social identity providers and SMTP are not provisioned here; configure any required
-providers before migrating users with linked external accounts.
+Google and Facebook identity providers are reconciled separately as described
+below. SMTP is not provisioned here.
+
+#### Google And Facebook Login
+
+The `keycloak-admin-bootstrap` component includes a `keycloak-social-logins`
+CronJob that reconciles the `google` and `facebook` aliases every five minutes.
+It works for both new and existing `velotime` realms without deleting or
+reimporting the realm. Both providers appear on the login screen, request email
+access, use the built-in `first broker login` flow, and do not automatically
+trust provider email addresses or store provider tokens. Existing-account linking
+retains Keycloak's default verification requirements.
+
+Before deploying, create real OAuth applications in Google Cloud and Meta's
+developer console and populate these four secrets in the development Azure Key
+Vault (these are externally issued credentials, not Terraform-generated values):
+
+| Provider | Client ID / app ID vault secret | Client / app secret vault secret | Authorized redirect URI |
+| --- | --- | --- | --- |
+| Google | `keycloak-google-client-id` | `keycloak-google-client-secret` | `https://auth.development.veloti.me/realms/velotime/broker/google/endpoint` |
+| Facebook | `keycloak-facebook-client-id` | `keycloak-facebook-client-secret` | `https://auth.development.veloti.me/realms/velotime/broker/facebook/endpoint` |
+
+Configure the Google consent screen/audience and Meta app domains, Facebook Login
+and app mode/review requirements for the users who should sign in. Development
+or testing apps may restrict login to explicitly listed testers.
+
+External Secrets copies these values into `keycloak-social-logins` in the
+`keycloak` namespace. Missing vault values prevent that ExternalSecret from
+becoming Ready and block the bootstrap Kustomization and its dependents; provision
+them before rollout. Rotation is picked up on the next scheduled run after the
+one-hour ExternalSecret refresh. Each run writes the vault secret even when
+Keycloak masks the stored value. Only these two aliases are managed; other
+providers and additional provider configuration are preserved. Removing the
+CronJob does not delete the providers. Do not edit managed fields in the Admin UI;
+the next run restores them.
+
+**Existing installations require a one-time permission grant before rollout:**
+using an independently authorized master-realm administrator, select the
+`velotime-operator` client in `master`, then its service-account role mappings.
+Grant the **master realm's `velotime-realm` client's**
+`manage-identity-providers` role. This is scoped to the `velotime` realm; do not
+grant `realm-admin` or master administration. The operator cannot grant itself this
+role after temporary bootstrap access has been removed. New installations receive
+the role automatically. The changed scripts replace the bootstrap Job; its
+permission verification must pass, so grant the role before deploying this change.
+
+The first scheduled run occurs within five minutes after deployment. Check the
+ExternalSecret is Ready and the CronJob's latest Job succeeds; CronJob creation
+alone does not confirm that provider reconciliation succeeded. Failures are
+reported in Job status and sanitized logs, including HTTP status for API errors.
+Then test both login buttons with authorized test accounts, including existing
+account linking. No live OAuth credentials or login tests are run by repository
+unit tests.
 
 #### First Deployment Prerequisites
 
@@ -186,8 +237,8 @@ Flux applies `keycloak-realm-secrets`, then Keycloak, then the realm import, the
 migration wait for successful client reconciliation. The bootstrap Job uses the
 temporary account to create the permanent account in `master`, granting only the
 Velotime management client's `manage-clients`, `view-clients`, `manage-users`,
-`view-users`, and `manage-realm` roles. It grants no master-realm administration
-or permission to create other realms. It verifies permanent API access before
+`view-users`, `manage-realm`, and `manage-identity-providers` roles. It grants no
+master-realm administration or permission to create other realms. It verifies permanent API access before
 deleting the temporary account. A retry works after cleanup using permanent
 credentials; failed verification retains temporary access. Retained completed
 Jobs are not periodically rerun. A changed bootstrap script replaces its Job via
@@ -204,8 +255,9 @@ the recovery command requires all Keycloak nodes to be stopped.
 `KeycloakRealmImport` creates a realm only once: edits do not update an existing
 realm or delete it. Keep the import CR managed by Flux to retain its completion
 status and avoid recreating a tracked resource through manual cleanup. Changes to
-realm settings, policies, scopes or composite roles after import need a separately
-reviewed update procedure, not a realm deletion/reimport.
+realm settings (other than the separately reconciled social providers), policies,
+scopes or composite roles after import need a separately reviewed update procedure,
+not a realm deletion/reimport.
 
 Client CR changes are reconciled by the operator. Referenced client secrets are
 polled, allowing vault-backed secret rotation; coordinate this with the existing
@@ -228,7 +280,7 @@ after `tofu -chdir=terraform init -backend=false -input=false`:
 tofu -chdir=terraform test -filter=tests/keycloak_bootstrap.tftest.hcl
 ```
 
-Run the bootstrap safety tests with:
+Run the bootstrap and social login safety tests with:
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s clusters/development/keycloak-admin-bootstrap -p '*_test.py' -v

@@ -3,7 +3,9 @@ kind: Kustomization
 namespace: keycloak
 resources:
   - job.yaml
+  - social-logins.yaml
 configMapGenerator:
   - name: keycloak-admin-bootstrap
     files:
       - bootstrap.py
+      - social_logins.py

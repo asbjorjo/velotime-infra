@@ -73,6 +73,10 @@ class BootstrapTests(unittest.TestCase):
         self.api.request.assert_any_call(
             "GET", "/admin/api/velotime/clients/v2", "operator-token",
         )
+        self.api.request.assert_any_call(
+            "GET", "/admin/realms/velotime/identity-provider/instances", "operator-token",
+        )
+        self.assertIn("manage-identity-providers", bootstrap.OPERATOR_ROLES)
 
     def test_transient_authentication_failure_is_not_treated_as_missing_account(self):
         self.api.request.side_effect = bootstrap.APIError(503)
