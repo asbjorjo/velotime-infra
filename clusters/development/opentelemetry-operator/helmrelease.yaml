@@ -1,0 +1,33 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: opentelemetry-operator
+  namespace: opentelemetry-operator-system
+spec:
+  interval: 1h
+  releaseName: opentelemetry-operator
+  targetNamespace: opentelemetry-operator-system
+  storageNamespace: opentelemetry-operator-system
+  timeout: 5m
+  chart:
+    spec:
+      chart: opentelemetry-operator
+      version: "0.127.0"
+      sourceRef:
+        kind: HelmRepository
+        name: opentelemetry
+        namespace: flux-system
+      interval: 1h
+  install:
+    remediation:
+      retries: 0
+  upgrade:
+    remediation:
+      retries: 0
+  values:
+    admissionWebhooks:
+      certManager:
+        enabled: true
+    manager:
+      image:
+        tag: "0.162.0"
