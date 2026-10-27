@@ -140,11 +140,32 @@ providers before migrating users with linked external accounts.
 
 #### First Deployment Prerequisites
 
-Populate all three application client secrets above and these two additional,
-independent random secrets in the development Azure Key Vault before reconciling:
+The core `terraform/` deployment automatically generates all three application
+client secrets above and these two additional, independent credentials in each
+environment's Azure Key Vault before Flux bootstrap runs:
 
 - `keycloak-bootstrap-admin-client-secret`: temporary master-realm bootstrap service account.
 - `keycloak-operator-client-secret`: permanent operator service account.
+
+Each credential is a separate 32-character alphanumeric `random_password`, retained
+in OpenTofu state across applies. No manual secret generation or Keycloak Admin UI
+interaction is needed for a fresh installation once GitHub/Azure authentication
+and External Secrets access are configured. These credentials are sensitive state
+data; restrict access to the state bucket and never expose their values in logs.
+
+The vault resources seed values only on creation (`ignore_changes = [value]`), so
+later applies do not undo coordinated credential rotation. Replacing a random
+resource alone does not rotate an existing vault secret or Keycloak account.
+
+**Existing installations:** before applying this change, import each of the five
+existing vault secrets into the core deployment's matching resource address,
+`module.keyvault.azurerm_key_vault_secret.keycloak_client["<secret-name>"]`, using
+its Azure Key Vault secret identifier. Use the explicitly selected environment's
+backend and variable file, following the backend setup above. Imported values are
+preserved even though the new random resources generate unused initial values.
+Review the environment's plan to ensure no existing credential is replaced; do
+not delete/recreate secrets to resolve ownership conflicts. Importing secrets does
+not provision missing admin accounts in an already-initialized Keycloak database.
 
 `keycloak-realm-secrets` mirrors these values into the `keycloak` namespace.
 The bootstrap and permanent Kubernetes Secrets are `keycloak-bootstrap-admin`
@@ -197,6 +218,13 @@ on secret refresh. Coordinate that credential's rotation using an authorized adm
 session, the vault value, and the operator; never remove the last working credential.
 Keep the bootstrap secret available for retry mounts, but its deleted account
 cannot authenticate. Changing it will not recreate an account in an existing master realm.
+
+Run the vault credential tests with mocked Azure resources (no cloud access),
+after `tofu -chdir=terraform init -backend=false -input=false`:
+
+```sh
+tofu -chdir=terraform test -filter=tests/keycloak_bootstrap.tftest.hcl
+```
 
 Run the bootstrap safety tests with:
 
