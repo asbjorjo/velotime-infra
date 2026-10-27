@@ -9,7 +9,7 @@ terraform {
   required_providers {
     upcloud = {
       source  = "UpCloudLtd/upcloud"
-      version = ">= 5.34.0"
+      version = ">= 5.46.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"

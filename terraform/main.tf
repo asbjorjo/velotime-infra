@@ -40,10 +40,13 @@ module "cache" {
 module "database" {
   source = "./database"
 
-  basename = var.basename
-  network  = module.network.network_id
-  zone     = var.zone
-  plan     = var.database_plan
+  basename         = var.basename
+  network          = module.network.network_id
+  zone             = var.zone
+  plan_compute     = var.database_plan_compute
+  plan_node_count  = var.database_plan_node_count
+  plan_storage_gib = var.database_plan_storage_gib
+  plan_backups     = var.database_plan_backups
 
   username = var.database_username
 

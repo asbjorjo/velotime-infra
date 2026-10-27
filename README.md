@@ -16,6 +16,8 @@ Each deployment job's GitHub Environment is used as the state bucket name and se
 
 The core Terraform files define the environment basename, zone, network, and resource plans. The Flux bootstrap files define the environment selected for Flux synchronization and the bootstrap revision. Add matching files in both locations before deploying a new environment.
 
+PostgreSQL uses componentized database plans (UpCloud provider >= 5.46.0): `database_plan_compute`, `database_plan_node_count`, `database_plan_storage_gib`, and `database_plan_backups` replace the legacy `database_plan` input. Both environments configure `rdb.development.1CPU-1GB`, one node, 10 GiB of storage per node, and the `mini` backup tier. Review an environment-specific plan before applying this migration to an existing database.
+
 ### Environment Configuration
 
 Configure the following variables in each Terraform GitHub Environment (`development` and `production`):
