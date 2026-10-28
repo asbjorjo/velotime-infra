@@ -109,8 +109,8 @@ components separately with `kubectl kustomize clusters/development/<component>`.
 
 The development realm is initialized by
 [`keycloak-realm`](clusters/development/keycloak-realm/keycloakrealmimport.yaml).
-It imports realm settings, roles, shared token scopes and a public-client PKCE policy,
-but no users or client definitions. The baseline is the application's
+It imports realm settings, roles, shared token scopes, a public-client PKCE policy,
+and the public WebUI client, but no users. The baseline is the application's
 [`velotime-realm.json`](https://github.com/asbjorjo/VeloTimer/blob/8e5b046df98666355d2351e157e794854b79135b/config/keycloak/realms/velotime-realm.json),
 without its test account or wildcard redirects. Built-in scopes are explicitly
 preserved alongside `velotime:all`; the shared scope supplies the exact API audience
@@ -118,7 +118,8 @@ preserved alongside `velotime:all`; the shared scope supplies the exact API audi
 when a service requests a token without specifying scopes.
 
 [`keycloak-clients`](clusters/development/keycloak-clients/kustomization.yaml)
-manages clients separately using the operator's `KeycloakOIDCClient` v2alpha1 API.
+manages the three service clients separately using the operator's
+`KeycloakOIDCClient` v2alpha1 API.
 The pinned Keycloak/operator release is `26.7.4`. Client management requires the
 **experimental** `client-admin-api:v2` feature, enabled in the Keycloak CR.
 
@@ -139,6 +140,14 @@ account receives the `velotime-users-migration` composite realm role, combining
 `query-users`/`manage-users` roles. These grants do not make ordinary users admins.
 Google and Facebook identity providers are reconciled separately as described
 below. SMTP is not provisioned here.
+
+The WebUI client is initialized by the realm import, not continuously reconciled
+as a `KeycloakOIDCClient`. Realm imports skip existing realms, so changing this
+definition does not update an already deployed realm. Before deploying this move
+to an existing environment, arrange an explicit ownership handoff for the existing
+`velotime.webui` client: verify its settings in Keycloak and the operator's deletion
+behavior before allowing Flux to prune the old CR. Do not delete the realm to
+re-run the import.
 
 #### Google And Facebook Login
 
