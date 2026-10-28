@@ -63,6 +63,35 @@ spec:
       - velotime
     defaultOptionalClientScopes:
       - offline_access
+    clients:
+      - clientId: velotime.webui
+        name: VeloTime Web UI
+        enabled: true
+        protocol: openid-connect
+        publicClient: true
+        standardFlowEnabled: true
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        fullScopeAllowed: true
+        rootUrl: https://development.veloti.me
+        baseUrl: https://development.veloti.me
+        redirectUris:
+          - https://development.veloti.me/signin-oidc
+          - https://development.veloti.me/signout-callback-oidc
+        webOrigins:
+          - https://development.veloti.me
+        attributes:
+          pkce.code.challenge.method: S256
+        defaultClientScopes:
+          - profile
+          - email
+          - roles
+          - web-origins
+          - basic
+          - velotime
+        optionalClientScopes:
+          - offline_access
     clientScopes:
       - name: velotime
         description: VeloTime API audience, subject and permission claims
