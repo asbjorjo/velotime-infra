@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: gateway
+  namespace: gateway-system
+spec:
+  infrastructure:
+    annotations:
+      # Frontend names must match the listener names above; UpCloud CCM reads this to configure the LB.
+      service.beta.kubernetes.io/upcloud-load-balancer-config: |
+        {
+          "plan": "essentials",
+          "frontends": [
+            {"name": "port-80", "mode": "tcp", "port": 80},
+            {"name": "port-443", "mode": "tcp", "port": 443}
+          ]
+        }

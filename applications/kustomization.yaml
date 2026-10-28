@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - keycloak-realm-secrets/flux-kustomization.yaml
+  - keycloak-realm/flux-kustomization.yaml
+  - keycloak-admin-bootstrap/flux-kustomization.yaml
+  - keycloak-clients/flux-kustomization.yaml
+  - velotime-namespace/flux-kustomization.yaml
+  - velotime-instrumentation/flux-kustomization.yaml
+  - velotime-db-grant/flux-kustomization.yaml
+  - velotime-bootstrap-secrets/flux-kustomization.yaml
+  - velotime-bootstrap/flux-kustomization.yaml
+  - velotime-secrets/flux-kustomization.yaml
+  - velotime/flux-kustomization.yaml
+  - velotime-migration/flux-kustomization.yaml

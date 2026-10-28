@@ -1,0 +1,10 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: telemetry
+  namespace: velotime-instrumentation
+spec:
+  config:
+    exporters:
+      otlp:
+        endpoint: monitor.ajjg.no:4317

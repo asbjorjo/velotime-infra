@@ -1,0 +1,24 @@
+- op: test
+  path: /spec/realm/clients/0/clientId
+  value: velotime.webui
+- op: add
+  path: /spec/realm/clients/0/rootUrl
+  value: https://development.veloti.me
+- op: add
+  path: /spec/realm/clients/0/baseUrl
+  value: https://development.veloti.me
+- op: add
+  path: /spec/realm/clients/0/redirectUris
+  value:
+    - https://development.veloti.me/signin-oidc
+    - https://development.veloti.me/signout-callback-oidc
+- op: add
+  path: /spec/realm/clients/0/webOrigins
+  value:
+    - https://development.veloti.me
+- op: test
+  path: /spec/realm/clientScopes/0/protocolMappers/0/name
+  value: velotime-audience
+- op: add
+  path: /spec/realm/clientScopes/0/protocolMappers/0/config/included.custom.audience
+  value: https://development.veloti.me

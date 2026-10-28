@@ -1,0 +1,20 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: velotime
+  namespace: flux-system
+spec:
+  values:
+    global:
+      oidcAudience: https://development.veloti.me
+      oidcAuthority: https://auth.development.veloti.me/
+    module-statistics-processor:
+      replicaCount: 0
+    module-timing-processor:
+      replicaCount: 0
+    webui:
+      httpRoute:
+        hostnames:
+          - development.veloti.me
+    valkey:
+      replicaCount: 0

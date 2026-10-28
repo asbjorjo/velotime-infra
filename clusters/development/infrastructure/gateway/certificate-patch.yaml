@@ -1,0 +1,9 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-tls
+  namespace: gateway-system
+spec:
+  dnsNames:
+    - development.veloti.me
+    - auth.development.veloti.me

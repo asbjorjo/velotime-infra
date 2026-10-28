@@ -1,0 +1,24 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak
+  namespace: flux-system
+spec:
+  interval: 1h
+  retryInterval: 1m
+  path: ./services/keycloak
+  prune: true
+  wait: true
+  healthCheckExprs:
+    - apiVersion: k8s.keycloak.org/v2beta1
+      kind: Keycloak
+      current: >-
+        has(status.conditions) &&
+        status.conditions.exists(condition, condition.type == 'Ready' && condition.status == 'True')
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: keycloak-db-grant
+    - name: keycloak-bootstrap-secrets
+  timeout: 10m

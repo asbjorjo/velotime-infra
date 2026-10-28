@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - gateway-api-crds/flux-kustomization.yaml
+  - cilium/flux-kustomization.yaml
+  - cert-manager/flux-kustomization.yaml
+  - cert-manager-issuer/flux-kustomization.yaml
+  - gateway/flux-kustomization.yaml
+  - external-secrets/flux-kustomization.yaml
+  - external-secrets-crds/flux-kustomization.yaml
+  - external-secrets-operator/flux-kustomization.yaml
+  - external-secrets-crs/flux-kustomization.yaml
+  - external-dns-namespace/flux-kustomization.yaml
+  - external-dns-secrets/flux-kustomization.yaml
+  - external-dns/flux-kustomization.yaml
+  - opentelemetry-operator/flux-kustomization.yaml
+  - keycloak-namespace/flux-kustomization.yaml
+  - keycloak-operator/flux-kustomization.yaml

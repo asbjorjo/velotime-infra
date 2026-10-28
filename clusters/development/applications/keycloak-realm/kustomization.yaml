@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../../applications/keycloak-realm
+patches:
+  - target:
+      group: k8s.keycloak.org
+      version: v2beta1
+      kind: KeycloakRealmImport
+      name: velotime
+    path: realm-patch.yaml

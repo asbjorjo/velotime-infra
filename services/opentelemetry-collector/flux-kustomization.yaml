@@ -1,0 +1,18 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: opentelemetry-collector
+  namespace: flux-system
+spec:
+  interval: 1h
+  path: ./services/opentelemetry-collector
+  prune: true
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: telemetry-collector
+      namespace: velotime-instrumentation
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  timeout: 5m

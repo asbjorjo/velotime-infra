@@ -1,0 +1,24 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  interval: 1h
+  retryInterval: 1m
+  path: ./clusters/development/infrastructure
+  prune: true
+  wait: true
+  healthCheckExprs:
+    - apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      current: >-
+        has(status.observedGeneration) &&
+        status.observedGeneration == metadata.generation &&
+        has(status.conditions) &&
+        status.conditions.exists(condition, condition.type == 'Ready' && condition.status == 'True') &&
+        !status.conditions.exists(condition, condition.type in ['Reconciling', 'Stalled'] && condition.status == 'True')
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  timeout: 30m

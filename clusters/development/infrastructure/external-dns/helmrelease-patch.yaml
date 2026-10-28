@@ -1,0 +1,12 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: flux-system
+spec:
+  values:
+    txtOwnerId: development
+    domainFilters:
+      - veloti.me
+    extraArgs:
+      azure-resource-group: velotime-rg-noe

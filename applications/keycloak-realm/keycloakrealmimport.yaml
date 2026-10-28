@@ -1,0 +1,152 @@
+apiVersion: k8s.keycloak.org/v2beta1
+kind: KeycloakRealmImport
+metadata:
+  name: velotime
+  namespace: keycloak
+spec:
+  keycloakCRName: keycloak
+  realm:
+    realm: velotime
+    enabled: true
+    displayName: VeloTime Realm
+    attributes:
+      CreateDefaultClientScopes: "true"
+    sslRequired: external
+    registrationAllowed: true
+    registrationEmailAsUsername: false
+    rememberMe: true
+    verifyEmail: false
+    loginWithEmailAllowed: true
+    duplicateEmailsAllowed: false
+    resetPasswordAllowed: true
+    editUsernameAllowed: false
+    bruteForceProtected: true
+    permanentLockout: false
+    maxFailureWaitSeconds: 900
+    minimumQuickLoginWaitSeconds: 60
+    waitIncrementSeconds: 60
+    quickLoginCheckMilliSeconds: 1000
+    maxDeltaTimeSeconds: 43200
+    failureFactor: 30
+    accessTokenLifespan: 300
+    defaultRoles:
+      - velotime-user
+    roles:
+      realm:
+        - name: velotime-user
+          description: User role
+        - name: velotime-admin
+          description: Administrator for all VeloTime modules
+        - name: facilities-admin
+          description: Facilities administrator
+        - name: timing-admin
+          description: Timing and transponder ownership administrator
+        - name: statistics-admin
+          description: Statistics definitions administrator
+        - name: velotime-users-migration
+          description: Import users and their timing and statistics records
+          composite: true
+          composites:
+            realm:
+              - timing-admin
+              - statistics-admin
+            client:
+              realm-management:
+                - query-users
+                - manage-users
+    defaultDefaultClientScopes:
+      - profile
+      - email
+      - roles
+      - web-origins
+      - basic
+      - velotime
+    defaultOptionalClientScopes:
+      - offline_access
+    clients:
+      - clientId: velotime.webui
+        name: VeloTime Web UI
+        enabled: true
+        protocol: openid-connect
+        publicClient: true
+        standardFlowEnabled: true
+        implicitFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        fullScopeAllowed: true
+        attributes:
+          pkce.code.challenge.method: S256
+        defaultClientScopes:
+          - profile
+          - email
+          - roles
+          - web-origins
+          - basic
+          - velotime
+        optionalClientScopes:
+          - offline_access
+    clientScopes:
+      - name: velotime
+        description: VeloTime API audience, subject and permission claims
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: "true"
+          display.on.consent.screen: "false"
+        protocolMappers:
+          - name: velotime-audience
+            protocol: openid-connect
+            protocolMapper: oidc-audience-mapper
+            config:
+              id.token.claim: "false"
+              access.token.claim: "true"
+          - name: client roles
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-client-role-mapper
+            consentRequired: false
+            config:
+              user.attribute: ""
+              access.token.claim: "true"
+              claim.name: resource_access.${client_id}.roles
+              jsonType.label: String
+              multivalued: "true"
+              id.token.claim: "true"
+              lightweight.claim: "false"
+              userinfo.token.claim: "true"
+          - name: realm roles
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-realm-role-mapper
+            consentRequired: false
+            config:
+              user.attribute: ""
+              access.token.claim: "true"
+              claim.name: realm_access.roles
+              jsonType.label: String
+              multivalued: "true"
+              id.token.claim: "true"
+              lightweight.claim: "false"
+              userinfo.token.claim: "true"
+          - name: audience resolve
+            protocol: openid-connect
+            protocolMapper: oidc-audience-resolve-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              access.token.claim: "true"
+    clientProfiles:
+      profiles:
+        - name: velotime-public-pkce
+          executors:
+            - executor: pkce-enforcer
+              configuration:
+                auto-configure: true
+    clientPolicies:
+      policies:
+        - name: velotime-public-pkce
+          enabled: true
+          conditions:
+            - condition: client-access-type
+              configuration:
+                type:
+                  - public
+          profiles:
+            - velotime-public-pkce
