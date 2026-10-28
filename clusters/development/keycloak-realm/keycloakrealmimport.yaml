@@ -29,9 +29,11 @@ spec:
     maxDeltaTimeSeconds: 43200
     failureFactor: 30
     accessTokenLifespan: 300
+    defaultRoles:
+      - velotime-user
     roles:
       realm:
-        - name: user
+        - name: velotime-user
           description: User role
         - name: velotime-admin
           description: Administrator for all VeloTime modules
@@ -58,15 +60,11 @@ spec:
       - roles
       - web-origins
       - basic
-      - velotime-web
+      - velotime
     defaultOptionalClientScopes:
       - offline_access
-    scopeMappings:
-      - clientScope: velotime-web
-        roles:
-          - user
     clientScopes:
-      - name: velotime-web
+      - name: velotime
         description: VeloTime API audience, subject and permission claims
         protocol: openid-connect
         attributes:
@@ -80,31 +78,39 @@ spec:
               included.custom.audience: https://development.veloti.me
               id.token.claim: "false"
               access.token.claim: "true"
-          - name: velotime-subject
-            protocol: openid-connect
-            protocolMapper: oidc-sub-mapper
-            config:
-              access.token.claim: "true"
-              introspection.token.claim: "true"
-          - name: realm roles
-            protocol: openid-connect
-            protocolMapper: oidc-usermodel-realm-role-mapper
-            config:
-              multivalued: "true"
-              userinfo.token.claim: "true"
-              id.token.claim: "true"
-              access.token.claim: "true"
-              claim.name: realm_access.roles
-              jsonType.label: String
           - name: client roles
             protocol: openid-connect
             protocolMapper: oidc-usermodel-client-role-mapper
+            consentRequired: false
             config:
-              multivalued: "true"
-              id.token.claim: "false"
+              user.attribute: ""
               access.token.claim: "true"
               claim.name: resource_access.${client_id}.roles
               jsonType.label: String
+              multivalued: "true"
+              id.token.claim: "true"
+              lightweight.claim: "false"
+              userinfo.token.claim: "true"
+          - name: realm roles
+            protocol: openid-connect
+            protocolMapper: oidc-usermodel-realm-role-mapper
+            consentRequired: false
+            config:
+              user.attribute: ""
+              access.token.claim: "true"
+              claim.name: realm_access.roles
+              jsonType.label: String
+              multivalued: "true"
+              id.token.claim: "true"
+              lightweight.claim: "false"
+              userinfo.token.claim: "true"
+          - name: audience resolve
+            protocol: openid-connect
+            protocolMapper: oidc-audience-resolve-mapper
+            consentRequired: false
+            config:
+              introspection.token.claim: "true"
+              access.token.claim: "true"
     clientProfiles:
       profiles:
         - name: velotime-public-pkce
