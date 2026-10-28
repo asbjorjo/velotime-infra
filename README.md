@@ -302,8 +302,10 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s clusters/development/k
 Build the four new components separately as well as the development root. After
 deployment to the explicitly selected development context, verify ExternalSecrets
 are Ready, the realm import reports `Done=True`, the bootstrap Job is Complete,
-and every client reports current `observedGeneration`, nonempty `uuid`/`hash`, and
+and every client reports current `observedGeneration`, a nonempty `hash`, and
 `HasErrors=False`. The Flux health expressions reject missing or stale client status.
+Client readiness does not require `status.uuid`, which the operator may omit even
+after successful reconciliation.
 Check realm discovery at
 `https://auth.development.veloti.me/realms/velotime/.well-known/openid-configuration`,
 then test WebUI login/logout and fresh service tokens' exact issuer, audience,
