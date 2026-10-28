@@ -1,0 +1,32 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak-clients
+  namespace: flux-system
+spec:
+  interval: 1h
+  retryInterval: 1m
+  path: ./applications/keycloak-clients
+  prune: true
+  wait: true
+  healthCheckExprs:
+    - apiVersion: k8s.keycloak.org/v2alpha1
+      kind: KeycloakOIDCClient
+      failed: >-
+        has(status.observedGeneration) &&
+        status.observedGeneration == metadata.generation && has(status.conditions) &&
+        status.conditions.exists(condition, condition.type == 'HasErrors' && condition.status == 'True')
+      current: >-
+        has(status.observedGeneration) &&
+        status.observedGeneration == metadata.generation &&
+        has(status.hash) && status.hash != '' &&
+        has(status.conditions) &&
+        status.conditions.exists(condition, condition.type == 'HasErrors' && condition.status == 'False')
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: keycloak-realm
+    - name: keycloak-admin-bootstrap
+    - name: keycloak-realm-secrets
+  timeout: 10m

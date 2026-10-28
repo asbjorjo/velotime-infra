@@ -3,7 +3,8 @@
 ## Repository Shape
 
 - This is an OpenTofu/Terraform infrastructure repository for UpCloud.
-- The `terraform/` root module composes `network`, `cluster`, `cache`, and `database`. Flux bootstrap is a separate deployment in `flux-bootstrap/`, applied after `terraform/` via its own state and workflow. Flux manifests remain under `clusters/`.
+- The `terraform/` root module composes `network`, `cluster`, `cache`, and `database`. Flux bootstrap is a separate deployment in `flux-bootstrap/`, applied after `terraform/` via its own state and workflow. Reusable Flux bases live in `infrastructure/`, `services/`, and `applications/`; cluster roots, layer gates, environment overlays, and FluxInstance manifests live under `clusters/`.
+- Development uses the layer chain `infrastructure` -> `services` -> `applications`. Component `dependsOn` references must remain within their layer; only layer gates depend on other layers. Keep each component/layer's Flux definition out of its own Kustomize build.
 - Keep module inputs and outputs explicit. Preserve the dependency flow through root-module references and `depends_on` where provider initialization requires it.
 - `flux-bootstrap/`'s Helm and Kubernetes providers read a kubeconfig file fetched by CI via `upctl kubernetes config <basename>-cluster`, not Terraform-managed cluster outputs; `terraform/` has no `helm`/`kubernetes` provider.
 
@@ -13,6 +14,7 @@
 - Use the same OpenTofu version as CI (`1.12.5`) when reproducing workflow behavior.
 - Environment-backed plan/apply requires S3-compatible backend configuration for UpCloud Object Storage. Do not run a state-backed command until the intended environment and backend are explicit.
 - Review `.github/workflows/terraform-plan.yml`, `.github/workflows/terraform-apply.yml`, and `.github/workflows/flux-bootstrap-apply.yml` before changing CI or deployment behavior.
+- For Flux changes, build the cluster root, layer aggregators, and effective component paths with `kubectl kustomize`. With `tests/requirements.txt` installed in an external Python virtual environment, run `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p '*_test.py' -v`. Keycloak safety tests live in `applications/keycloak-admin-bootstrap`.
 
 ## Safety and Secrets
 
@@ -25,6 +27,7 @@
 
 - `var.environment` selects `clusters/<environment>/flux-system/flux-instance.yaml` from the `flux-bootstrap/` root module; a matching manifest must exist before applying that environment.
 - Changes to infrastructure plans, networking, access filters, credentials, or Flux bootstrap have deployment impact and should be reviewed with a plan for the target environment.
+- Moving resources between Flux inventories requires the staged pruning-protection and ownership-handoff procedure in README; identical rendered resources alone do not make a move safe.
 - Resource names derive from `var.basename`; preserve that convention when adding resources. `flux-bootstrap/` assumes the cluster is named `<basename>-cluster` and does not take `basename` as a Terraform variable itself — CI resolves the cluster name via `upctl`.
 
 See [README.md](README.md) for GitHub environment variables, secrets, backend setup, and Flux bootstrap details.
