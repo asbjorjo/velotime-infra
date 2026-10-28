@@ -31,6 +31,7 @@ spec:
       imagePullSecrets:
         - name: ghcr
       oidcAudience: https://development.veloti.me
+      oidcAuthority: https://auth.development.veloti.me/
     module-facilities-api:
       existingSecret: module-facilities-api
     module-statistics-api:
