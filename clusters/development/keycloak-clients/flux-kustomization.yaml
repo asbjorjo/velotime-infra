@@ -19,7 +19,7 @@ spec:
       current: >-
         has(status.observedGeneration) &&
         status.observedGeneration == metadata.generation &&
-        has(status.uuid) && status.uuid != '' && has(status.hash) && status.hash != '' &&
+        has(status.hash) && status.hash != '' &&
         has(status.conditions) &&
         status.conditions.exists(condition, condition.type == 'HasErrors' && condition.status == 'False')
   sourceRef:
