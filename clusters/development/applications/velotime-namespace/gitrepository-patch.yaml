@@ -6,4 +6,4 @@ metadata:
 spec:
   interval: 5m
   ref:
-    branch: copilot
+    branch: v2
