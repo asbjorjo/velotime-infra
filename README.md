@@ -134,6 +134,14 @@ stop existing Pods or suspend already-created child Kustomizations, which contin
 their own reconciliations. A fresh deployment creates downstream component
 definitions only after the preceding layer is Ready.
 
+Within services, `keycloak-db-grant` owns both the `keycloak-db-secret` and
+`keycloak-db-admin-secret` ExternalSecrets alongside its database grant Job.
+The Job starts once External Secrets has materialized its required Secret keys;
+the component's `wait: true` gate requires the Job to complete before `keycloak`
+reconciles. Keycloak also waits for `keycloak-bootstrap-secrets`. The database
+secret must not be owned by `keycloak` itself, since that would prevent its
+prerequisite grant Job from starting on a fresh installation.
+
 Development overlays contain hostnames/URLs, Key Vault/tenant configuration, DNS
 ownership/domain/resource-group settings, ACME contact, telemetry destination,
 application revision/replica choices, and captured Cilium adoption values.
@@ -219,6 +227,38 @@ The handoff is an operational procedure, not performed by rendering tests or
 automatically by this refactor. Verify live layer readiness, Keycloak realm/client
 status and application authentication afterward; do not run user-data migrations
 solely to validate the layout change.
+
+#### Existing cluster: Keycloak database secret ownership handoff
+
+If `keycloak` currently owns the `keycloak-db-secret` ExternalSecret, do not
+deploy its move into `keycloak-db-grant` directly. Its `creationPolicy: Owner`
+means pruning the ExternalSecret can also delete the generated database Secret.
+Use separately reviewed intermediate Git revisions and an explicitly selected
+cluster context, following the same resource-move procedure above:
+
+1. In the old layout, add the annotation
+   `kustomize.toolkit.fluxcd.io/prune: disabled` to the `keycloak-db-secret`
+   ExternalSecret in `keycloak`. Reconcile its current `keycloak` owner and verify
+   the live annotation before moving the manifest. If the owner cannot reconcile,
+   stop and resolve the prerequisite failure rather than deploying an
+   unprotected move.
+2. Move the ExternalSecret into `keycloak-db-grant`, retaining that annotation at
+   its destination. Keep the ExternalSecret's identity and spec, the generated
+   Secret name, and the grant Job's pod template unchanged.
+3. Reconcile `keycloak-db-grant`, then the old `keycloak` owner. Inspect both
+   inventories using `flux tree kustomization <name> -n flux-system`: the grant
+   component must own the ExternalSecret and the Keycloak inventory must no
+   longer contain it. Verify the ExternalSecret is Ready, has no deletion
+   timestamp, the generated Secret still exists, and the grant and Keycloak
+   components are Ready. Do not print Secret contents.
+4. Only after the old inventory has released the ExternalSecret, remove the
+   temporary annotation in a final revision and reconcile again. Stop and
+   investigate any pruning, adoption, or readiness failure; do not delete the
+   Secret, database, or credentials to force the handoff.
+
+Fresh installations can use the final layout directly. Offline layout tests
+verify ownership and dependencies, not safe live inventory transfer or database
+connectivity.
 
 ### Development Keycloak Realm And Clients
 

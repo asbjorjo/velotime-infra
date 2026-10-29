@@ -195,6 +195,48 @@ class FluxLayoutTests(unittest.TestCase):
             self.components["keycloak"][1]["spec"]["dependsOn"],
         )
 
+    def test_keycloak_database_secrets_are_owned_by_grant(self):
+        for name in ("keycloak-db-secret", "keycloak-db-admin-secret"):
+            owners = [
+                component
+                for component, resources in self.workloads.items()
+                for resource in resources
+                if resource["kind"] == "ExternalSecret"
+                and resource["metadata"]["namespace"] == "keycloak"
+                and resource["spec"]["target"]["name"] == name
+            ]
+            with self.subTest(secret=name):
+                self.assertEqual(owners, ["keycloak-db-grant"])
+
+    def test_keycloak_grant_secret_keys_are_available_in_its_component(self):
+        resources = self.workloads["keycloak-db-grant"]
+        secrets = {
+            (resource["metadata"]["namespace"], resource["spec"]["target"]["name"]):
+                resource["spec"]["target"]["template"]["data"]
+            for resource in resources if resource["kind"] == "ExternalSecret"
+        }
+        jobs = [resource for resource in resources if resource["kind"] == "Job"]
+        self.assertEqual(len(jobs), 1)
+        job = jobs[0]
+        references = [
+            variable["valueFrom"]["secretKeyRef"]
+            for container in job["spec"]["template"]["spec"]["containers"]
+            for variable in container["env"]
+            if "secretKeyRef" in variable.get("valueFrom", {})
+        ]
+        self.assertTrue(references)
+        for reference in references:
+            target = (job["metadata"]["namespace"], reference["name"])
+            with self.subTest(secret=target, key=reference["key"]):
+                self.assertIn(target, secrets)
+                self.assertIn(reference["key"], secrets[target])
+
+    def test_keycloak_waits_for_grant_completion_and_bootstrap_secret(self):
+        self.assertTrue(self.components["keycloak-db-grant"][1]["spec"]["wait"])
+        dependencies = self.components["keycloak"][1]["spec"]["dependsOn"]
+        self.assertIn({"name": "keycloak-db-grant"}, dependencies)
+        self.assertIn({"name": "keycloak-bootstrap-secrets"}, dependencies)
+
     def test_collector_checks_generated_deployment(self):
         spec = self.components["opentelemetry-collector"][1]["spec"]
         self.assertFalse(spec.get("wait", False))
