@@ -1,5 +1,14 @@
 # Velotime Infrastructure
 
+## Dependency Updates
+
+[Dependabot](.github/dependabot.yml) checks weekly for GitHub Actions updates,
+Terraform/OpenTofu provider and module updates in both deployments and all local
+modules, Python test dependencies in `tests/requirements.txt`, and Dev Container
+Features in `.devcontainer/devcontainer.json`. Flux HelmRelease chart versions,
+Kustomize remote resources, and container images in Kubernetes manifests are not
+covered by this configuration and must be maintained separately.
+
 ## GitHub Actions
 
 Workflows use GitHub [deployment environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment):
