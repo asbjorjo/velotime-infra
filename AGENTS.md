@@ -17,6 +17,13 @@
 - Review `.github/workflows/terraform-plan.yml`, `.github/workflows/terraform-apply.yml`, and `.github/workflows/flux-bootstrap-apply.yml` before changing CI or deployment behavior.
 - For Flux changes, build the cluster root, layer aggregators, and effective component paths with `kubectl kustomize`. With `tests/requirements.txt` installed in an external Python virtual environment, run `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p '*_test.py' -v`. Keycloak safety tests live in `applications/keycloak-admin-bootstrap`.
 
+## Git Workflow
+
+- Before starting new work, fetch the remote that tracks `main`, switch to `main`, and update it with a fast-forward-only pull from its configured upstream. Create a descriptive topic branch from that synced `main`; do not commit directly to `main`.
+- If `main` has no configured upstream, the fetch/pull fails, local `main` has diverged, or switching would disturb existing work, stop and ask for guidance. Do not reset, discard, or automatically stash user changes.
+- Keep commits atomic: each commit should contain one logical change and its directly related tests or documentation. Review the staged diff and stage only task-related files or hunks; leave unrelated changes untouched.
+- Use Conventional Commit messages in the form `type(scope): description`, with an optional scope (for example, `docs: clarify agent Git workflow` or `fix(cluster): correct node configuration`).
+
 ## Safety and Secrets
 
 - Never commit state, `.env` files, kubeconfigs, credentials, or generated `.terraform` contents; see `.gitignore`.
