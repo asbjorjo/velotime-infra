@@ -1,0 +1,9 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: velotime-bootstrap
+  namespace: flux-system
+spec:
+  values:
+    global:
+      oidcAuthority: https://auth.development.veloti.me/
