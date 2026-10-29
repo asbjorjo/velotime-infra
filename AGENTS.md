@@ -12,15 +12,23 @@
 
 - Format and validate with `tofu -chdir=terraform fmt -check`, `tofu -chdir=terraform init -backend=false -input=false`, and `tofu -chdir=terraform validate -no-color`. Repeat with `-chdir=flux-bootstrap` for the Flux bootstrap deployment.
 - Use the same OpenTofu version as CI (`1.12.5`) when reproducing workflow behavior.
+- If OpenTofu `1.12.5`, `kubectl`, or the Python test virtual environment with `tests/requirements.txt` installed is unavailable, do not attempt a global install; state clearly which validation steps were skipped and why, and ask before installing tooling.
 - Environment-backed plan/apply requires S3-compatible backend configuration for UpCloud Object Storage. Do not run a state-backed command until the intended environment and backend are explicit.
 - Review `.github/workflows/terraform-plan.yml`, `.github/workflows/terraform-apply.yml`, and `.github/workflows/flux-bootstrap-apply.yml` before changing CI or deployment behavior.
 - For Flux changes, build the cluster root, layer aggregators, and effective component paths with `kubectl kustomize`. With `tests/requirements.txt` installed in an external Python virtual environment, run `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p '*_test.py' -v`. Keycloak safety tests live in `applications/keycloak-admin-bootstrap`.
+
+## Git Workflow
+
+- Before starting new work, fetch the remote that tracks `main`, switch to `main`, and update it with a fast-forward-only pull from its configured upstream. Create a descriptive topic branch from that synced `main`; do not commit directly to `main`.
+- If `main` has no configured upstream, the fetch/pull fails, local `main` has diverged, or switching would disturb existing work, stop and ask for guidance. Do not reset, discard, or automatically stash user changes.
+- Keep commits atomic: each commit should contain one logical change and its directly related tests or documentation. Review the staged diff and stage only task-related files or hunks; leave unrelated changes untouched.
+- Use Conventional Commit messages in the form `type(scope): description`, with an optional scope (for example, `docs: clarify agent Git workflow` or `fix(cluster): correct node configuration`).
 
 ## Safety and Secrets
 
 - Never commit state, `.env` files, kubeconfigs, credentials, or generated `.terraform` contents; see `.gitignore`.
 - Treat `TF_VAR_*`, provider credentials, SSH keys, IP filters, database credentials, and `FLUX_GIT_TOKEN` as sensitive. Do not print or hard-code them.
-- Keep `store_kubeconfig = false` for automated/root-module usage unless a local kubeconfig file is explicitly required and handled securely.
+- Keep `store_kubeconfig = false` in `terraform/`. Only set it to `true` if the user explicitly requests it, the output path is covered by `.gitignore`, and the change is confined to a local-only (non-CI) configuration.
 - Do not change the backend state key or migrate state without an explicit, reviewed operational plan.
 
 ## Environment and Flux
