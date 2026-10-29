@@ -8,11 +8,6 @@ updates:
   - package-ecosystem: "terraform"
     directories:
       - "/terraform"
-      - "/terraform/cache"
-      - "/terraform/cluster"
-      - "/terraform/database"
-      - "/terraform/keyvault"
-      - "/terraform/network"
       - "/flux-bootstrap"
     schedule:
       interval: "weekly"
