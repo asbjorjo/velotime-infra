@@ -4,5 +4,6 @@ metadata:
   name: velotime
   namespace: flux-system
 spec:
+  interval: 5m
   ref:
     branch: copilot
