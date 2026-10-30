@@ -69,6 +69,16 @@ The external-dns service principal needs `Reader` on the resource group and `Con
 
 ### Azure Key Vault (`terraform/keyvault`)
 
+The `module-profiles-api` deployment in the VeloTimer `v2` chart uses the existing
+`velotimedb` database for its Profiles schema. Its ExternalSecret reads
+`velotime-database-host`, `velotime-database-port`, `velotime-database-user`, and
+`velotime-database-password`, already provisioned by this module; no additional
+vault credentials or Keycloak service client are needed. The HelmRelease sets
+`module-profiles-api.existingSecret` so both the API and its `profiles-migration`
+init container receive the database connection. Application reconciliation
+already waits for `velotime-secrets` and `velotime-db-grant`, and the init
+container migrates the Profiles schema before the API starts.
+
 The core `terraform/` deployment provisions a per-environment Azure resource group (`velotime-infra-<basename>`) and Key Vault (`velotime-<basename>`), and writes the cache/database host, port, username, and Terraform-generated password into it as `velotime-cache-*`/`velotime-database-*` secrets. It also creates a `keycloak` logical database with its own user, then writes those connection values as `keycloak-database-host`, `keycloak-database-port`, `keycloak-database-name`, `keycloak-database-user`, and `keycloak-database-password` — the same secret names the `external-secrets` `azure-keyvault` `ClusterSecretStore` reads from. Database usernames default to `velotime` for cache and application database access and `keycloak` for Keycloak database access. Database passwords are generated inside the Terraform modules and are not passed through GitHub environment secrets. Authentication uses `AZURE_TF_CLIENT_ID`/`AZURE_TENANT_ID`/`AZURE_SUBSCRIPTION_ID` via GitHub Actions OIDC (`ARM_USE_OIDC`); a matching federated credential must exist on that app registration in Azure AD for each environment (subject `repo:<org>/<repo>:environment:development`/`:environment:production`). The module grants itself `Key Vault Secrets Officer` and grants the existing `AZURE_ESO_OBJECT_ID` principal `Key Vault Secrets User`.
 
 The derived Object Storage buckets must exist before their workflows run. Object Storage credentials should have read and write access to the respective state bucket and the `velotime-infra/terraform.tfstate` state key. Migrate existing state, including state in legacy buckets such as `velotime-tfstate-dev`, to the derived bucket before the apply workflow runs.

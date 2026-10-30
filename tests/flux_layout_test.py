@@ -195,6 +195,55 @@ class FluxLayoutTests(unittest.TestCase):
             self.components["keycloak"][1]["spec"]["dependsOn"],
         )
 
+    def test_profiles_uses_existing_vault_database_credentials(self):
+        release = next(
+            resource for resource in self.workloads["velotime"]
+            if resource["kind"] == "HelmRelease"
+        )
+        secret_name = release["spec"]["values"]["module-profiles-api"]["existingSecret"]
+        self.assertEqual(secret_name, "module-profiles-api")
+        secret = next(
+            resource for resource in self.workloads["velotime-secrets"]
+            if resource["kind"] == "ExternalSecret"
+            and resource["metadata"]["name"] == secret_name
+        )
+        self.assertEqual(secret["metadata"]["namespace"], release["spec"]["targetNamespace"])
+        spec = secret["spec"]
+        self.assertEqual(spec["secretStoreRef"], {
+            "kind": "ClusterSecretStore", "name": "azure-keyvault",
+        })
+        self.assertEqual(spec["target"]["name"], secret_name)
+        self.assertEqual(spec["target"]["creationPolicy"], "Owner")
+        remote_keys = {
+            entry["secretKey"]: entry["remoteRef"]["key"] for entry in spec["data"]
+        }
+        self.assertEqual(remote_keys, {
+            "VELOTIMEDB_HOST": "velotime-database-host",
+            "VELOTIMEDB_PORT": "velotime-database-port",
+            "VELOTIMEDB_USER": "velotime-database-user",
+            "VELOTIMEDB_PASSWORD": "velotime-database-password",
+        })
+        vault = (ROOT / "terraform/keyvault/main.tf").read_text()
+        for key in remote_keys.values():
+            with self.subTest(vault_secret=key):
+                self.assertIn(f'name         = "{key}"', vault)
+        self.assertEqual(spec["target"]["template"]["engineVersion"], "v2")
+        self.assertEqual(spec["target"]["template"]["data"], {
+            "VELOTIMEDB_PASSWORD": "{{ .VELOTIMEDB_PASSWORD }}",
+            "VELOTIMEDB_URI": (
+                "postgresql://{{ .VELOTIMEDB_USER }}:{{ .VELOTIMEDB_PASSWORD }}"
+                "@{{ .VELOTIMEDB_HOST }}:{{ .VELOTIMEDB_PORT }}/velotimedb"
+            ),
+            "ConnectionStrings__velotimedb": (
+                "Host={{ .VELOTIMEDB_HOST }};port={{ .VELOTIMEDB_PORT }};"
+                "Username={{ .VELOTIMEDB_USER }};Password={{ .VELOTIMEDB_PASSWORD }};"
+                "Database=velotimedb"
+            ),
+        })
+        dependencies = self.components["velotime"][1]["spec"]["dependsOn"]
+        self.assertIn({"name": "velotime-secrets"}, dependencies)
+        self.assertIn({"name": "velotime-db-grant"}, dependencies)
+
     def test_keycloak_database_secrets_are_owned_by_grant(self):
         for name in ("keycloak-db-secret", "keycloak-db-admin-secret"):
             owners = [

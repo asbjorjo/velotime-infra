@@ -32,6 +32,8 @@ spec:
         - name: ghcr
     module-facilities-api:
       existingSecret: module-facilities-api
+    module-profiles-api:
+      existingSecret: module-profiles-api
     module-statistics-api:
       existingSecret: module-statistics-api
     module-statistics-processor:
