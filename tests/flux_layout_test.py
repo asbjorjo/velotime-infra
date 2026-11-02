@@ -195,6 +195,45 @@ class FluxLayoutTests(unittest.TestCase):
             self.components["keycloak"][1]["spec"]["dependsOn"],
         )
 
+    def test_facilities_uses_existing_vault_messagebus_connection_string(self):
+        release = next(
+            resource for resource in self.workloads["velotime"]
+            if resource["kind"] == "HelmRelease"
+        )
+        secret_name = release["spec"]["values"]["module-facilities-api"]["existingSecret"]
+        self.assertEqual(secret_name, "module-facilities-api")
+        secret = next(
+            resource for resource in self.workloads["velotime-secrets"]
+            if resource["kind"] == "ExternalSecret"
+            and resource["metadata"]["name"] == secret_name
+        )
+        self.assertEqual(secret["metadata"]["namespace"], release["spec"]["targetNamespace"])
+        spec = secret["spec"]
+        self.assertEqual(spec["secretStoreRef"], {
+            "kind": "ClusterSecretStore", "name": "azure-keyvault",
+        })
+        self.assertEqual(spec["target"]["name"], secret_name)
+        self.assertEqual(spec["target"]["creationPolicy"], "Owner")
+        self.assertEqual(spec["target"]["template"]["engineVersion"], "v2")
+        self.assertEqual(
+            spec["target"]["template"]["data"]["ConnectionStrings__MessageBus"],
+            "{{ .ConnectionStrings__MessageBus }}",
+        )
+        self.assertEqual(
+            [
+                entry for entry in spec["data"]
+                if entry["secretKey"] == "ConnectionStrings__MessageBus"
+            ],
+            [{
+                "secretKey": "ConnectionStrings__MessageBus",
+                "remoteRef": {"key": "velotime-messagebus"},
+            }],
+        )
+        self.assertIn(
+            {"name": "velotime-secrets"},
+            self.components["velotime"][1]["spec"]["dependsOn"],
+        )
+
     def test_profiles_uses_existing_vault_database_and_cache_credentials(self):
         release = next(
             resource for resource in self.workloads["velotime"]
