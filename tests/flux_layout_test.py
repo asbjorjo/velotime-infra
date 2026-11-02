@@ -195,7 +195,7 @@ class FluxLayoutTests(unittest.TestCase):
             self.components["keycloak"][1]["spec"]["dependsOn"],
         )
 
-    def test_profiles_uses_existing_vault_database_credentials(self):
+    def test_profiles_uses_existing_vault_database_and_cache_credentials(self):
         release = next(
             resource for resource in self.workloads["velotime"]
             if resource["kind"] == "HelmRelease"
@@ -218,6 +218,10 @@ class FluxLayoutTests(unittest.TestCase):
             entry["secretKey"]: entry["remoteRef"]["key"] for entry in spec["data"]
         }
         self.assertEqual(remote_keys, {
+            "CACHE_HOST": "velotime-cache-host",
+            "CACHE_PORT": "velotime-cache-port",
+            "CACHE_USER": "velotime-cache-username",
+            "CACHE_PASSWORD": "velotime-cache-password",
             "VELOTIMEDB_HOST": "velotime-database-host",
             "VELOTIMEDB_PORT": "velotime-database-port",
             "VELOTIMEDB_USER": "velotime-database-user",
@@ -229,6 +233,18 @@ class FluxLayoutTests(unittest.TestCase):
                 self.assertIn(f'name         = "{key}"', vault)
         self.assertEqual(spec["target"]["template"]["engineVersion"], "v2")
         self.assertEqual(spec["target"]["template"]["data"], {
+            "CACHE_HOST": "{{ .CACHE_HOST }}",
+            "CACHE_PORT": "{{ .CACHE_PORT }}",
+            "CACHE_USER": "{{ .CACHE_USER }}",
+            "CACHE_PASSWORD": "{{ .CACHE_PASSWORD }}",
+            "CACHE_URI": (
+                "rediss://{{ .CACHE_USER }}:{{ .CACHE_PASSWORD }}"
+                "@{{ .CACHE_HOST }}:{{ .CACHE_PORT }}"
+            ),
+            "ConnectionStrings__cache": (
+                "{{ .CACHE_HOST }}:{{ .CACHE_PORT }},user={{ .CACHE_USER }},"
+                "password={{ .CACHE_PASSWORD }},ssl=true"
+            ),
             "VELOTIMEDB_PASSWORD": "{{ .VELOTIMEDB_PASSWORD }}",
             "VELOTIMEDB_URI": (
                 "postgresql://{{ .VELOTIMEDB_USER }}:{{ .VELOTIMEDB_PASSWORD }}"

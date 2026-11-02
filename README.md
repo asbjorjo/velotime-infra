@@ -72,8 +72,12 @@ The external-dns service principal needs `Reader` on the resource group and `Con
 The `module-profiles-api` deployment in the VeloTimer `v2` chart uses the existing
 `velotimedb` database for its Profiles schema. Its ExternalSecret reads
 `velotime-database-host`, `velotime-database-port`, `velotime-database-user`, and
-`velotime-database-password`, already provisioned by this module; no additional
-vault credentials or Keycloak service client are needed. The HelmRelease sets
+`velotime-database-password`, plus `velotime-cache-host`, `velotime-cache-port`,
+`velotime-cache-username`, and `velotime-cache-password`, already provisioned by
+this module. It exposes the cache values as `CACHE_HOST`, `CACHE_PORT`,
+`CACHE_USER`, and `CACHE_PASSWORD`, with TLS connections in `CACHE_URI` and
+`ConnectionStrings__cache`. No additional vault credentials or Keycloak service
+client are needed. The HelmRelease sets
 `module-profiles-api.existingSecret` so both the API and its `profiles-migration`
 init container receive the database connection. Application reconciliation
 already waits for `velotime-secrets` and `velotime-db-grant`, and the init
