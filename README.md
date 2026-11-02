@@ -165,6 +165,10 @@ reconciles. Keycloak also waits for `keycloak-bootstrap-secrets`. The database
 secret must not be owned by `keycloak` itself, since that would prevent its
 prerequisite grant Job from starting on a fresh installation.
 
+Facilities API's `module-facilities-api` Secret exposes
+`ConnectionStrings__MessageBus` from the existing `velotime-messagebus` secret in
+the environment's Azure Key Vault, matching the timing API and processors.
+
 Development overlays contain hostnames/URLs, Key Vault/tenant configuration, DNS
 ownership/domain/resource-group settings, ACME contact, telemetry destination,
 application revision/replica choices, and captured Cilium adoption values.
