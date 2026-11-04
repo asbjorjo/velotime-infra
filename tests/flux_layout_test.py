@@ -196,12 +196,18 @@ class FluxLayoutTests(unittest.TestCase):
         )
 
     def test_facilities_uses_existing_vault_messagebus_connection_string(self):
+        self.assert_uses_existing_vault_messagebus_connection_string("module-facilities-api")
+
+    def test_statistics_api_uses_existing_vault_messagebus_connection_string(self):
+        self.assert_uses_existing_vault_messagebus_connection_string("module-statistics-api")
+
+    def assert_uses_existing_vault_messagebus_connection_string(self, module):
         release = next(
             resource for resource in self.workloads["velotime"]
             if resource["kind"] == "HelmRelease"
         )
-        secret_name = release["spec"]["values"]["module-facilities-api"]["existingSecret"]
-        self.assertEqual(secret_name, "module-facilities-api")
+        secret_name = release["spec"]["values"][module]["existingSecret"]
+        self.assertEqual(secret_name, module)
         secret = next(
             resource for resource in self.workloads["velotime-secrets"]
             if resource["kind"] == "ExternalSecret"
