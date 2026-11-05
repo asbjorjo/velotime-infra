@@ -42,6 +42,10 @@ spec:
       existingSecret: module-timing-api
     module-timing-processor:
       existingSecret: module-timing-processor
+    messageBusTopology:
+      existingSecret:
+        name: velotime-messagebus-management
+        key: ConnectionStrings__MessageBusManagement
     webui:
       existingSecret: webui
       httpRoute:

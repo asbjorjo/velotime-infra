@@ -69,6 +69,15 @@ The external-dns service principal needs `Reader` on the resource group and `Con
 
 ### Azure Key Vault (`terraform/keyvault`)
 
+The VeloTimer message-bus topology Helm hook needs a separate Key Vault secret
+named `velotime-messagebus-management` containing a Service Bus connection string
+with Manage rights. Do not reuse the runtime `velotime-messagebus` credential.
+The `velotime-secrets` ExternalSecret syncs it into the
+`velotime-messagebus-management` Kubernetes Secret under the
+`ConnectionStrings__MessageBusManagement` key, which the chart's topology Job
+reads. Provision this credential in each environment's Key Vault before
+installing or upgrading the chart.
+
 The `module-profiles-api` deployment in the VeloTimer `v2` chart uses the existing
 `velotimedb` database for its Profiles schema. Its ExternalSecret reads
 `velotime-database-host`, `velotime-database-port`, `velotime-database-user`, and
