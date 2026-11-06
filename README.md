@@ -297,6 +297,22 @@ Fresh installations can use the final layout directly. Offline layout tests
 verify ownership and dependencies, not safe live inventory transfer or database
 connectivity.
 
+### Development WebUI Autoscaling
+
+The [development Velotime overlay](clusters/development/applications/velotime/)
+scales the WebUI between two and four replicas at 90% of its container memory
+request (currently 256 MiB). The cluster must provide the Kubernetes resource
+metrics API, such as through metrics-server. The HelmRelease post-renderer
+removes the chart's fixed WebUI replica count so that the HPA can manage it;
+other workloads retain their chart-defined replica counts. When changing the
+chart, verify that the WebUI Deployment and container names and memory request
+still match the autoscaler and that the post-render patch still applies.
+
+Removing the existing Helm-managed replica field may temporarily reset the
+Deployment to one replica during the first upgrade, before the HPA reconciles.
+Check the HPA's metrics and conditions and the Deployment's replica count after
+deployment; offline rendering does not verify the metrics API or live scaling.
+
 ### Development Keycloak Realm And Clients
 
 The development realm is initialized by

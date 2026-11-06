@@ -4,7 +4,7 @@
 	"name": "Debian",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/base:trixie",
-	"runArgs": ["--env-file", "${localWorkspaceFolder}/.env"],
+	// "runArgs": ["--env-file", "${localWorkspaceFolder}/.env"],
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {

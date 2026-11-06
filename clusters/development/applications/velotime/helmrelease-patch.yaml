@@ -4,14 +4,21 @@ metadata:
   name: velotime
   namespace: flux-system
 spec:
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: apps
+              version: v1
+              kind: Deployment
+              name: velotime-webui
+            patch: |-
+              - op: remove
+                path: /spec/replicas
   values:
     global:
       oidcAudience: https://development.veloti.me
       oidcAuthority: https://auth.development.veloti.me/
-    module-statistics-processor:
-      replicaCount: 0
-    module-timing-processor:
-      replicaCount: 0
     webui:
       httpRoute:
         hostnames:
