@@ -1,4 +1,5 @@
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -197,6 +198,48 @@ class FluxLayoutTests(unittest.TestCase):
 
     def test_facilities_uses_existing_vault_messagebus_connection_string(self):
         self.assert_uses_existing_vault_messagebus_connection_string("module-facilities-api")
+
+    def test_velotime_webui_autoscaling(self):
+        resources = self.workloads["velotime"]
+        release = next(resource for resource in resources if resource["kind"] == "HelmRelease")
+        hpa = next(resource for resource in resources if resource["kind"] == "HorizontalPodAutoscaler")
+        self.assertEqual(hpa["apiVersion"], "autoscaling/v2")
+        self.assertEqual(hpa["metadata"]["namespace"], release["spec"]["targetNamespace"])
+        self.assertEqual(hpa["spec"], {
+            "scaleTargetRef": {
+                "apiVersion": "apps/v1", "kind": "Deployment", "name": "velotime-webui",
+            },
+            "minReplicas": 2,
+            "maxReplicas": 4,
+            "metrics": [{
+                "type": "ContainerResource",
+                "containerResource": {
+                    "name": "memory", "container": "webui",
+                    "target": {"type": "Utilization", "averageUtilization": 90},
+                },
+            }],
+        })
+        patches = release["spec"]["postRenderers"][0]["kustomize"]["patches"]
+        deployments = [
+            {
+                "apiVersion": "apps/v1", "kind": "Deployment",
+                "metadata": {"name": name},
+                "spec": {"replicas": 1},
+            }
+            for name in ("velotime-webui", "velotime-module-timing-api")
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            (path / "deployments.yaml").write_text(yaml.safe_dump_all(deployments))
+            (path / "kustomization.yaml").write_text(yaml.safe_dump({
+                "apiVersion": "kustomize.config.k8s.io/v1beta1",
+                "kind": "Kustomization",
+                "resources": ["deployments.yaml"],
+                "patches": patches,
+            }))
+            rendered = {resource["metadata"]["name"]: resource for resource in build(path)}
+        self.assertNotIn("replicas", rendered["velotime-webui"]["spec"])
+        self.assertEqual(rendered["velotime-module-timing-api"]["spec"]["replicas"], 1)
 
     def test_statistics_api_uses_existing_vault_messagebus_connection_string(self):
         self.assert_uses_existing_vault_messagebus_connection_string("module-statistics-api")
