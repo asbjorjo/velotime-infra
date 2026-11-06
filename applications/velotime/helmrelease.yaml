@@ -34,6 +34,10 @@ spec:
       existingSecret: module-facilities-api
     module-profiles-api:
       existingSecret: module-profiles-api
+    module-notifications-api:
+      existingSecret: module-notifications-api
+    module-notifications-processor:
+      existingSecret: module-notifications-processor
     module-statistics-api:
       existingSecret: module-statistics-api
     module-statistics-processor:
