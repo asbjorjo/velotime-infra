@@ -8,10 +8,6 @@ spec:
     global:
       oidcAudience: https://development.veloti.me
       oidcAuthority: https://auth.development.veloti.me/
-    module-statistics-processor:
-      replicaCount: 0
-    module-timing-processor:
-      replicaCount: 0
     webui:
       httpRoute:
         hostnames:
