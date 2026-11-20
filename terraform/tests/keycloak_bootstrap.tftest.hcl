@@ -59,6 +59,14 @@ run "seed_keycloak_secrets" {
   }
 
   assert {
+    condition = (
+      azurerm_key_vault_secret.database_admin_port.name == "velotime-database-admin-port" &&
+      azurerm_key_vault_secret.database_admin_port.value == "5432"
+    )
+    error_message = "The database admin port secret must mirror the database service port."
+  }
+
+  assert {
     condition = alltrue([
       for name, password in random_password.keycloak_client :
       can(regex("^[A-Za-z0-9]{32}$", password.result)) &&
