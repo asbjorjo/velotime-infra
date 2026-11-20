@@ -32,6 +32,8 @@ spec:
       secret:
         name: keycloak-db-secret
         key: database
+    - name: db-url-properties
+      value: "?sslmode=require"
   http:
     httpEnabled: true
   ingress:

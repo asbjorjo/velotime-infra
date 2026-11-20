@@ -348,6 +348,116 @@ class FluxLayoutTests(unittest.TestCase):
         self.assertIn({"name": "velotime-secrets"}, dependencies)
         self.assertIn({"name": "velotime-db-grant"}, dependencies)
 
+    def test_notifications_use_existing_vault_database_and_cache_credentials(self):
+        release = next(
+            resource for resource in self.workloads["velotime"]
+            if resource["kind"] == "HelmRelease"
+        )
+        remote_keys = {
+            "CACHE_HOST": "velotime-cache-host",
+            "CACHE_PORT": "velotime-cache-port",
+            "CACHE_USER": "velotime-cache-username",
+            "CACHE_PASSWORD": "velotime-cache-password",
+            "VELOTIMEDB_HOST": "velotime-database-host",
+            "VELOTIMEDB_PORT": "velotime-database-port",
+            "VELOTIMEDB_USER": "velotime-database-user",
+            "VELOTIMEDB_PASSWORD": "velotime-database-password",
+        }
+        template = {
+            "CACHE_PASSWORD": "{{ .CACHE_PASSWORD }}",
+            "CACHE_URI": (
+                "rediss://{{ .CACHE_USER }}:{{ .CACHE_PASSWORD }}"
+                "@{{ .CACHE_HOST }}:{{ .CACHE_PORT }}"
+            ),
+            "ConnectionStrings__cache": (
+                "{{ .CACHE_HOST }}:{{ .CACHE_PORT }},user={{ .CACHE_USER }},"
+                "password={{ .CACHE_PASSWORD }},ssl=true"
+            ),
+            "VELOTIMEDB_PASSWORD": "{{ .VELOTIMEDB_PASSWORD }}",
+            "VELOTIMEDB_URI": (
+                "postgresql://{{ .VELOTIMEDB_USER }}:{{ .VELOTIMEDB_PASSWORD }}"
+                "@{{ .VELOTIMEDB_HOST }}:{{ .VELOTIMEDB_PORT }}/velotimedb"
+            ),
+            "ConnectionStrings__velotimedb": (
+                "Host={{ .VELOTIMEDB_HOST }};port={{ .VELOTIMEDB_PORT }};"
+                "Username={{ .VELOTIMEDB_USER }};Password={{ .VELOTIMEDB_PASSWORD }};"
+                "Database=velotimedb"
+            ),
+        }
+        for name in ("module-notifications-api", "module-notifications-processor"):
+            with self.subTest(component=name):
+                self.assertEqual(release["spec"]["values"][name]["existingSecret"], name)
+                secret = next(
+                    resource for resource in self.workloads["velotime-secrets"]
+                    if resource["kind"] == "ExternalSecret"
+                    and resource["metadata"]["name"] == name
+                )
+                self.assertEqual(
+                    secret["metadata"]["namespace"], release["spec"]["targetNamespace"],
+                )
+                spec = secret["spec"]
+                self.assertEqual(spec["secretStoreRef"], {
+                    "kind": "ClusterSecretStore", "name": "azure-keyvault",
+                })
+                self.assertEqual(spec["target"]["name"], name)
+                self.assertEqual(spec["target"]["creationPolicy"], "Owner")
+                expected_keys = dict(remote_keys)
+                expected_template = dict(template)
+                if name == "module-notifications-processor":
+                    expected_keys["ConnectionStrings__MessageBus"] = "velotime-messagebus"
+                    expected_template["ConnectionStrings__MessageBus"] = (
+                        "{{ .ConnectionStrings__MessageBus }}"
+                    )
+                self.assertEqual({
+                    entry["secretKey"]: entry["remoteRef"]["key"]
+                    for entry in spec["data"]
+                }, expected_keys)
+                self.assertEqual(spec["target"]["template"]["engineVersion"], "v2")
+                self.assertEqual(spec["target"]["template"]["data"], expected_template)
+        dependencies = self.components["velotime"][1]["spec"]["dependsOn"]
+        self.assertIn({"name": "velotime-secrets"}, dependencies)
+        self.assertIn({"name": "velotime-db-grant"}, dependencies)
+
+    def test_webui_has_runtime_messagebus_for_notification_refresh(self):
+        release = next(
+            resource for resource in self.workloads["velotime"]
+            if resource["kind"] == "HelmRelease"
+        )
+        secret_name = release["spec"]["values"]["webui"]["existingSecret"]
+        secret = next(
+            resource for resource in self.workloads["velotime-secrets"]
+            if resource["kind"] == "ExternalSecret"
+            and resource["metadata"]["name"] == secret_name
+        )
+        data = secret["spec"]["target"]["template"]["data"]
+        self.assertEqual(
+            data["ConnectionStrings__MessageBus"], "{{ .ConnectionStrings__MessageBus }}",
+        )
+        self.assertIn("ConnectionStrings__cache", data)
+        self.assertIn({
+            "secretKey": "ConnectionStrings__MessageBus",
+            "remoteRef": {"key": "velotime-messagebus"},
+        }, secret["spec"]["data"])
+        values = release["spec"]["values"]
+        self.assertEqual(
+            values["global"]["oidcAudience"], "https://development.veloti.me",
+        )
+        self.assertEqual(
+            values["global"]["oidcAuthority"], "https://auth.development.veloti.me/",
+        )
+        topic = next(
+            topic for topic in values["messageBusTopology"]["topics"]
+            if topic["name"] == "velotime-notifications"
+        )
+        self.assertEqual(topic["subscriptions"], [{
+            "name": "webui-notifications",
+            "requiresSession": False,
+            "rules": [{
+                "name": "NotificationsRefreshRequestedV1",
+                "sqlFilter": "MessageName = 'NotificationsRefreshRequestedV1'",
+            }],
+        }])
+
     def test_keycloak_database_secrets_are_owned_by_grant(self):
         for name in ("keycloak-db-secret", "keycloak-db-admin-secret"):
             owners = [
@@ -360,6 +470,40 @@ class FluxLayoutTests(unittest.TestCase):
             ]
             with self.subTest(secret=name):
                 self.assertEqual(owners, ["keycloak-db-grant"])
+
+    def test_keycloak_and_velotime_database_connections_require_ssl(self):
+        keycloak = next(
+            resource for resource in self.workloads["keycloak"]
+            if resource["kind"] == "Keycloak"
+        )
+        keycloak_options = {
+            option["name"]: option
+            for option in keycloak["spec"]["additionalOptions"]
+        }
+        self.assertEqual(
+            keycloak_options["db-url-properties"]["value"], "?sslmode=require",
+        )
+
+        database_templates = []
+        for component in ("velotime-bootstrap-secrets", "velotime-secrets"):
+            database_templates.extend(
+                resource["spec"]["target"]["template"]["data"]
+                for resource in self.workloads[component]
+                if resource["kind"] == "ExternalSecret"
+                and (
+                    "VELOTIMEDB_URI"
+                    in resource["spec"]["target"]["template"].get("data", {})
+                    or "ConnectionStrings__velotimedb"
+                    in resource["spec"]["target"]["template"].get("data", {})
+                )
+            )
+        self.assertTrue(database_templates)
+        for data in database_templates:
+            with self.subTest(data=data):
+                if "VELOTIMEDB_URI" in data:
+                    self.assertTrue(data["VELOTIMEDB_URI"].endswith("?sslmode=require"))
+                if "ConnectionStrings__velotimedb" in data:
+                    self.assertIn("SSL Mode=Require", data["ConnectionStrings__velotimedb"])
 
     def test_keycloak_grant_secret_keys_are_available_in_its_component(self):
         resources = self.workloads["keycloak-db-grant"]
