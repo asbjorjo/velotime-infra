@@ -27,7 +27,7 @@ spec:
             - name: PGPORT
               valueFrom:
                 secretKeyRef:
-                  name: velotime-db-secret
+                  name: velotime-db-admin-port-secret
                   key: port
             - name: VELOTIME_DB_NAME
               valueFrom:

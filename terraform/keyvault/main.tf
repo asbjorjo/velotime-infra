@@ -107,6 +107,13 @@ resource "azurerm_key_vault_secret" "database_port" {
   depends_on   = [time_sleep.rbac_propagation]
 }
 
+resource "azurerm_key_vault_secret" "database_admin_port" {
+  name         = "velotime-database-admin-port"
+  value        = var.database_port
+  key_vault_id = azurerm_key_vault.instance.id
+  depends_on   = [time_sleep.rbac_propagation]
+}
+
 resource "azurerm_key_vault_secret" "database_username" {
   name         = "velotime-database-user"
   value        = var.database_username

@@ -528,6 +528,32 @@ class FluxLayoutTests(unittest.TestCase):
                 self.assertIn(target, secrets)
                 self.assertIn(reference["key"], secrets[target])
 
+    def test_velotime_grant_uses_separate_admin_port_secret(self):
+        resources = self.workloads["velotime-db-grant"]
+        port_secret = next(
+            resource for resource in resources
+            if resource["kind"] == "ExternalSecret"
+            and resource["spec"]["target"]["name"] == "velotime-db-admin-port-secret"
+        )
+        self.assertEqual(
+            port_secret["spec"]["target"]["template"]["data"],
+            {"port": "{{ .port }}"},
+        )
+        self.assertIn({
+            "secretKey": "port",
+            "remoteRef": {"key": "velotime-database-admin-port"},
+        }, port_secret["spec"]["data"])
+
+        job = next(resource for resource in resources if resource["kind"] == "Job")
+        pgport = next(
+            variable for variable in job["spec"]["template"]["spec"]["containers"][0]["env"]
+            if variable["name"] == "PGPORT"
+        )
+        self.assertEqual(
+            pgport["valueFrom"]["secretKeyRef"],
+            {"name": "velotime-db-admin-port-secret", "key": "port"},
+        )
+
     def test_keycloak_waits_for_grant_completion_and_bootstrap_secret(self):
         self.assertTrue(self.components["keycloak-db-grant"][1]["spec"]["wait"])
         dependencies = self.components["keycloak"][1]["spec"]["dependsOn"]
