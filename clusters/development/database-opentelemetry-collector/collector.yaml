@@ -1,0 +1,47 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: database-telemetry
+  namespace: velotime-instrumentation
+spec:
+  mode: deployment
+  envFrom:
+    - secretRef:
+        name: database-metrics
+  config:
+    receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: velotime-database
+              scrape_interval: 30s
+              scheme: http
+              metrics_path: /metrics
+              basic_auth:
+                username: ${env:DATABASE_METRICS_USER}
+                password: ${env:DATABASE_METRICS_PASSWORD}
+              static_configs:
+                - targets:
+                    - ${env:DATABASE_HOST}:9273
+            - job_name: velotime-cache
+              scrape_interval: 30s
+              scheme: http
+              metrics_path: /metrics
+              basic_auth:
+                username: ${env:CACHE_METRICS_USER}
+                password: ${env:CACHE_METRICS_PASSWORD}
+              static_configs:
+                - targets:
+                    - ${env:CACHE_HOST}:9273
+    exporters:
+      otlp:
+        endpoint: telemetry-collector.velotime-instrumentation.svc.cluster.local:4317
+        tls:
+          insecure: true
+    service:
+      pipelines:
+        metrics:
+          receivers:
+            - prometheus
+          exporters:
+            - otlp
