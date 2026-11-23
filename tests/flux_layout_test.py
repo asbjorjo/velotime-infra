@@ -51,10 +51,13 @@ class FluxLayoutTests(unittest.TestCase):
             for name, (_, resource) in cls.components.items()
             if resource["spec"]["sourceRef"]["name"] == "flux-system"
         }
+        cls.database_resources = build(
+            ROOT / cls.gates["database-opentelemetry-collector"]["spec"]["path"],
+        )
 
-    def test_root_manages_only_instance_and_layer_gates(self):
-        self.assertEqual(set(self.gates), set(LAYERS))
-        self.assertEqual(len(self.root), 4)
+    def test_root_manages_instance_layer_gates_and_database_collector(self):
+        self.assertEqual(set(self.gates), {*LAYERS, "database-opentelemetry-collector"})
+        self.assertEqual(len(self.root), 5)
         self.assertEqual(
             [resource["kind"] for resource in self.root].count("FluxInstance"), 1,
         )
@@ -160,7 +163,11 @@ class FluxLayoutTests(unittest.TestCase):
 
     def test_workloads_are_not_duplicated_or_self_reconciling(self):
         owners = {}
-        for component, resources in self.workloads.items():
+        workloads = {
+            **self.workloads,
+            "database-opentelemetry-collector": self.database_resources,
+        }
+        for component, resources in workloads.items():
             for resource in resources:
                 key = identity(resource)
                 with self.subTest(component=component, resource=key):
@@ -569,6 +576,100 @@ class FluxLayoutTests(unittest.TestCase):
             "name": "telemetry-collector",
             "namespace": "velotime-instrumentation",
         }])
+
+    def test_database_collector_is_standalone_and_has_no_dependants(self):
+        name = "database-opentelemetry-collector"
+        kustomizations = list(self.gates.values()) + [
+            resource for _, resource in self.components.values()
+        ]
+        for resource in kustomizations:
+            with self.subTest(kustomization=resource["metadata"]["name"]):
+                self.assertNotIn(
+                    name,
+                    [dependency["name"] for dependency in resource["spec"].get("dependsOn", [])],
+                )
+        services = self.gates["services"]["spec"]
+        self.assertTrue(services["wait"])
+        self.assertNotIn(name, self.components)
+        spec = self.gates[name]["spec"]
+        self.assertEqual(spec["dependsOn"], [{"name": "services"}])
+        self.assertEqual(spec["path"], "./clusters/development/database-opentelemetry-collector")
+        self.assertEqual(spec["sourceRef"], {"kind": "GitRepository", "name": "flux-system"})
+        self.assertEqual(spec["healthChecks"], [{
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "name": "database-telemetry-collector",
+            "namespace": "velotime-instrumentation",
+        }])
+
+    def test_database_collector_scrapes_with_separate_vault_credentials(self):
+        resources = self.database_resources
+        collectors = {
+            resource["metadata"]["name"]: resource
+            for resource in resources if resource["kind"] == "OpenTelemetryCollector"
+        }
+        self.assertEqual(set(collectors), {"database-telemetry"})
+        collector = collectors["database-telemetry"]
+        secret = next(
+            resource for resource in resources
+            if resource["kind"] == "ExternalSecret"
+            and resource["metadata"]["name"] == "database-metrics"
+        )
+        self.assertEqual(collector["metadata"]["namespace"], secret["metadata"]["namespace"])
+        self.assertEqual(collector["spec"]["envFrom"], [
+            {"secretRef": {"name": secret["spec"]["target"]["name"]}},
+        ])
+        self.assertEqual(secret["spec"]["secretStoreRef"], {
+            "kind": "ClusterSecretStore", "name": "azure-keyvault",
+        })
+        self.assertEqual({
+            entry["secretKey"]: entry["remoteRef"]["key"]
+            for entry in secret["spec"]["data"]
+        }, {
+            "DATABASE_HOST": "velotime-database-host",
+            "CACHE_HOST": "velotime-cache-host",
+            "DATABASE_METRICS_USER": "database-metrics-user",
+            "DATABASE_METRICS_PASSWORD": "database-metrics-password",
+            "CACHE_METRICS_USER": "cache-metrics-user",
+            "CACHE_METRICS_PASSWORD": "cache-metrics-password",
+        })
+        config = collector["spec"]["config"]
+        jobs = config["receivers"]["prometheus"]["config"]["scrape_configs"]
+        self.assertEqual(len(jobs), 2)
+        for job, component in zip(jobs, ("DATABASE", "CACHE")):
+            with self.subTest(component=component):
+                self.assertEqual(job["job_name"], f"velotime-{component.lower()}")
+                self.assertEqual(job["scheme"], "http")
+                self.assertEqual(job["metrics_path"], "/metrics")
+                self.assertEqual(job["static_configs"], [
+                    {"targets": [f"${{env:{component}_HOST}}:9273"]},
+                ])
+                self.assertEqual(job["basic_auth"], {
+                    "username": f"${{env:{component}_METRICS_USER}}",
+                    "password": f"${{env:{component}_METRICS_PASSWORD}}",
+                })
+        self.assertEqual(config["service"]["pipelines"], {
+            "metrics": {"receivers": ["prometheus"], "exporters": ["otlp"]},
+        })
+        self.assertEqual(
+            config["exporters"],
+            {"otlp": {
+                "endpoint": "telemetry-collector.velotime-instrumentation.svc.cluster.local:4317",
+                "tls": {"insecure": True},
+            }},
+        )
+        telemetry = next(
+            resource for resource in self.workloads["opentelemetry-collector"]
+            if resource["kind"] == "OpenTelemetryCollector"
+        )
+        self.assertEqual(
+            telemetry["spec"]["config"]["receivers"]["otlp"]["protocols"]["grpc"]["endpoint"],
+            "0.0.0.0:4317",
+        )
+        self.assertEqual(
+            set(telemetry["spec"]["config"]["service"]["pipelines"]),
+            {"logs", "metrics", "traces"},
+        )
 
     def test_gateway_checks_current_accepted_and_programmed_conditions(self):
         checks = self.components["gateway"][1]["spec"]["healthCheckExprs"]

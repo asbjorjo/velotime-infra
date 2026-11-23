@@ -5,3 +5,4 @@ resources:
   - infrastructure/flux-kustomization.yaml
   - services/flux-kustomization.yaml
   - applications/flux-kustomization.yaml
+  - database-opentelemetry-collector/flux-kustomization.yaml

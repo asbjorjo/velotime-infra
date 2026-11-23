@@ -67,6 +67,46 @@ For each environment that deploys external-dns, populate these secrets in the va
 
 The external-dns service principal needs `Reader` on the resource group and `Contributor` or `DNS Zone Contributor` on the DNS zone. Within the infrastructure layer, `external-dns-secrets` waits for both `external-dns-namespace` and the shared store (`external-secrets-crs`), then its ExternalSecret renders these values into the `external-dns/external-dns-azure-config` Secret's `azure.json` key. The external-dns Kustomization waits for `external-dns-secrets` before reconciling its HelmRelease; OpenTofu no longer creates the namespace or configuration Secret. The shared store does not depend on external-dns.
 
+### Development database and cache metrics
+
+The development [database collector](clusters/development/database-opentelemetry-collector/)
+adds a separate `database-telemetry` OpenTelemetry collector in
+`velotime-instrumentation`. Every 30 seconds it scrapes
+`http://<database-host>:9273/metrics` and `http://<cache-host>:9273/metrics`,
+using the existing `velotime-database-host` and `velotime-cache-host` vault
+secrets. Metrics are exported via OTLP to the existing VeloTime telemetry
+collector at `telemetry-collector.velotime-instrumentation.svc.cluster.local:4317`,
+which forwards them to its configured destination. Its logs, metrics, and traces
+pipelines are unchanged.
+
+Before reconciling development, an operator must configure the metrics endpoints
+and provision these secrets in the development Azure Key Vault:
+
+- `database-metrics-user` and `database-metrics-password`: database metrics basic auth.
+- `cache-metrics-user` and `cache-metrics-password`: cache metrics basic auth.
+
+These four credentials are operator-managed, **not managed by Terraform**, and
+must match the endpoints' metrics credentials, not the database/cache login
+credentials. The `database-metrics` ExternalSecret reads them through the shared
+`azure-keyvault` store into a Kubernetes Secret consumed by the new collector.
+Allow the collector's network access to both endpoints on port 9273.
+HTTP basic auth sends credentials unencrypted; this configuration intentionally
+uses HTTP and requires a trusted network path.
+
+The database collector has its own root-level Flux Kustomization outside the
+deployment layers. It waits for the services layer (including the existing
+telemetry collector) and checks its own generated Deployment.
+No Kustomization depends on database telemetry. Missing metrics secrets or a
+failed database collector remain visible on its Kustomization without blocking
+services or applications.
+After rotating credentials or changing hostnames, wait for the ExternalSecret to
+refresh (up to one hour), then restart the collector to reload its environment:
+
+```sh
+kubectl --context <development-context> -n velotime-instrumentation \
+  rollout restart deployment/database-telemetry-collector
+```
+
 ### Azure Key Vault (`terraform/keyvault`)
 
 The VeloTimer message-bus topology Helm hook needs a separate Key Vault secret
@@ -161,19 +201,22 @@ Local components have their own `kustomization.yaml`, manifests, and reusable
 patches. Upstream components retain their upstream GitRepository paths.
 
 The [development root](clusters/development/kustomization.yaml) includes its
-FluxInstance and exactly three Flux Kustomizations:
+FluxInstance, three layer Flux Kustomizations, and a standalone database telemetry
+Kustomization:
 
 ```text
 infrastructure -> services -> applications
+                       \----> database-opentelemetry-collector
 ```
 
 Each layer builds its matching directory under
 [`clusters/development/`](clusters/development/). That directory imports the shared
 layer and patches component paths to development overlays where necessary.
 Uncustomized components reconcile their shared base directly.
-**Component `dependsOn` references stay within a layer.** Only layer
-Kustomizations depend on other layers; the old cross-boundary component
-dependencies are not retained.
+**Component `dependsOn` references stay within a layer.** Layer
+Kustomizations establish the inter-layer dependencies; the standalone database telemetry
+Kustomization also depends on the services layer, with no dependants of its own.
+The old cross-boundary component dependencies are not retained.
 
 Layer gates wait for all child Kustomizations to report Ready at their current
 generation, with neither Reconciling nor Stalled set to True. Children wait for
