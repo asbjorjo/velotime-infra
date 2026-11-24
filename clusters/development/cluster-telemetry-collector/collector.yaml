@@ -1,0 +1,78 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: cluster-telemetry
+  namespace: velotime-instrumentation
+spec:
+  mode: deployment
+  replicas: 1
+  image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s:0.162.0
+  serviceAccount: cluster-telemetry
+  podAnnotations:
+    telemetry.velotime.io/collector: cluster-state
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    privileged: false
+    readOnlyRootFilesystem: true
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  config:
+    receivers:
+      k8s_cluster:
+        collection_interval: 30s
+        metadata_collection_interval: 5m
+        node_conditions_to_report:
+          - Ready
+          - MemoryPressure
+          - DiskPressure
+          - PIDPressure
+        allocatable_types_to_report:
+          - cpu
+          - memory
+          - ephemeral-storage
+          - pods
+    processors:
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 384
+        spike_limit_mib: 64
+      batch:
+        timeout: 5s
+        send_batch_size: 1024
+    exporters:
+      otlp:
+        endpoint: telemetry-collector.velotime-instrumentation.svc.cluster.local:4317
+        tls:
+          insecure: true
+        sending_queue:
+          enabled: true
+          num_consumers: 2
+          queue_size: 256
+        retry_on_failure:
+          enabled: true
+          initial_interval: 5s
+          max_interval: 30s
+          max_elapsed_time: 5m
+    service:
+      pipelines:
+        metrics:
+          receivers:
+            - k8s_cluster
+          processors:
+            - memory_limiter
+            - batch
+          exporters:
+            - otlp

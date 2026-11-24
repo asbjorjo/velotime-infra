@@ -107,6 +107,94 @@ kubectl --context <development-context> -n velotime-instrumentation \
   rollout restart deployment/database-telemetry-collector
 ```
 
+### Development node, cluster, and container logs
+
+Two independent, development-only root Flux Kustomizations add a node Collector
+DaemonSet and a single-replica cluster-state Collector Deployment. Each waits for
+the services layer, checks its generated workload, and has no dependants. The
+existing gateway, its external transport, production configuration, and the
+database/cache collector are unchanged.
+
+Both new root Kustomizations are committed with `spec.suspend: true`, so Flux
+will not create either Collector or its RBAC until the development log paths,
+permissions, and duplicate-log inventory have been verified. After completing
+the prerequisites below, set `suspend: false` for each Kustomization to begin
+the development rollout.
+
+The node Collector uses the Kubernetes Collector distribution pinned to `0.162.0`
+(the distribution and component list were verified against the running
+development Collector). It collects kubelet node/pod/container/volume metrics,
+host CPU, disk, filesystem, memory, and network metrics, and stdout/stderr files
+from `/var/log/pods` across namespaces except `velotime`. The cluster Collector
+uses the `k8s_cluster` receiver for cluster-state metrics. Both send OTLP to the
+existing `telemetry-collector.velotime-instrumentation` service. Requests and
+limits are set per Collector. At inspection time, development had two amd64
+nodes with one CPU and about 3.7 GiB allocatable memory each. Recheck node capacity and
+admission policy before rollout.
+
+**Do not enable the development Flux components until the runtime prerequisites
+and duplicate-log inventory below are verified.** The current cluster inspection
+confirmed containerd and the kubelet version, but did not inspect node
+`/var/log/pods` contents, CRI log formatting, file permissions, or host filesystem
+layout. Confirm that these paths and read-only mounts work on every eligible
+node, and that policy permits a root-running but non-privileged agent with
+read-only host mounts. The agent runs as root only to read host log files; it
+drops all Linux capabilities, disables privilege escalation, and has a
+read-only root filesystem. The host root and pod-log directory are mounted
+read-only. Node-level kubelet/host metrics and logs may be incomplete if these
+assumptions do not hold.
+
+The kubeletstats receiver authenticates with its service-account token but skips
+server certificate verification because the kubelet uses a private CA. TLS
+encryption without identity verification still permits kubelet impersonation,
+credential exposure, and metric tampering. The Collector-to-gateway connection
+also uses the existing plaintext OTLP transport; the gateway currently forwards
+to its existing external endpoint without transport changes. This exposes
+cluster-wide log contents and metrics to network observation and modification.
+Confirm the destination and network path are trusted before enabling log export.
+
+Filelog starts at the end of files when first discovered and keeps no persistent
+checkpoints. A Collector restart can skip log records; bounded in-memory export
+queues can also lose data during prolonged backend failure or saturation.
+Delivery is not exactly once, and retries can result in duplicates. Collected
+log bodies are not redacted: arbitrary application logs can contain credentials,
+personal data, or other secrets, and metadata exclusions are not a redaction or
+security boundary.
+
+The node Collector always excludes files for its own and the cluster Collector's
+generated pods. Other OTLP-log exclusions require an explicit pod-template
+annotation:
+
+```yaml
+telemetry.velotime.io/otlp-logs: "true"
+```
+
+Add it only after confirming that the workload actually emits the same log
+events over OTLP and verifying the pod annotation is visible to the Collector.
+The current development pod inspection found .NET auto-instrumentation on some
+workloads, but did not establish that they emit OTLP logs. The `velotime`
+namespace is excluded wholesale; workloads in other namespaces are not
+pre-excluded.
+Missing Kubernetes metadata is marked on the log resource and does not trigger a
+workload exclusion, so duplicates may pass until the metadata or inventory is
+corrected. Recheck this inventory whenever workload logging changes.
+
+Before enabling Flux, verify the on-node log paths and permissions, confirm
+service-account authorization to kubelet `/stats/summary` and the Kubernetes API,
+and verify the node-to-gateway and gateway-to-backend network paths. After
+reconciliation, check that the DaemonSet is ready on every eligible node and the
+cluster Collector has exactly one ready replica; inspect receiver/exporter error
+and dropped-record metrics, confirm expected node/cluster metrics and workload
+metadata, and check included/excluded test workloads. Observe resource use,
+backend delivery, restart loss, queue saturation, and unchanged application
+traces/database metrics before expanding use. No live Collector rollout or
+end-to-end backend validation was performed for this change.
+
+To roll back, revert or remove the two standalone entries from the development
+root Kustomization and let Flux prune their Collector resources and RBAC. Do not
+hand-delete Flux-owned resources. The existing gateway and database/cache
+collector remain independently managed.
+
 ### Azure Key Vault (`terraform/keyvault`)
 
 The VeloTimer message-bus topology Helm hook needs a separate Key Vault secret
@@ -201,12 +289,14 @@ Local components have their own `kustomization.yaml`, manifests, and reusable
 patches. Upstream components retain their upstream GitRepository paths.
 
 The [development root](clusters/development/kustomization.yaml) includes its
-FluxInstance, three layer Flux Kustomizations, and a standalone database telemetry
-Kustomization:
+FluxInstance, three layer Flux Kustomizations, and standalone database,
+node-telemetry, and cluster-telemetry Kustomizations:
 
 ```text
 infrastructure -> services -> applications
                        \----> database-opentelemetry-collector
+                       \----> node-telemetry-collector
+                       \----> cluster-telemetry-collector
 ```
 
 Each layer builds its matching directory under
@@ -214,9 +304,9 @@ Each layer builds its matching directory under
 layer and patches component paths to development overlays where necessary.
 Uncustomized components reconcile their shared base directly.
 **Component `dependsOn` references stay within a layer.** Layer
-Kustomizations establish the inter-layer dependencies; the standalone database telemetry
-Kustomization also depends on the services layer, with no dependants of its own.
-The old cross-boundary component dependencies are not retained.
+Kustomizations establish the inter-layer dependencies; each standalone telemetry
+Kustomization depends on the services layer and has no dependants of its own. The
+old cross-boundary component dependencies are not retained.
 
 Layer gates wait for all child Kustomizations to report Ready at their current
 generation, with neither Reconciling nor Stalled set to True. Children wait for

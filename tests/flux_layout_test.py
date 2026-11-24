@@ -1,3 +1,5 @@
+import fnmatch
+import re
 import subprocess
 import tempfile
 import unittest
@@ -29,6 +31,19 @@ def identity(resource):
     )
 
 
+def log_record_is_excluded(expressions, resource_attributes):
+    for expression in expressions:
+        match = re.fullmatch(
+            r'resource\.attributes\["([^"]+)"\] == "([^"]+)"',
+            expression,
+        )
+        if match is None:
+            raise AssertionError(f"Unsupported log exclusion expression: {expression}")
+        if resource_attributes.get(match.group(1)) == match.group(2):
+            return True
+    return False
+
+
 class FluxLayoutTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -54,10 +69,21 @@ class FluxLayoutTests(unittest.TestCase):
         cls.database_resources = build(
             ROOT / cls.gates["database-opentelemetry-collector"]["spec"]["path"],
         )
+        cls.node_resources = build(
+            ROOT / cls.gates["node-telemetry-collector"]["spec"]["path"],
+        )
+        cls.cluster_resources = build(
+            ROOT / cls.gates["cluster-telemetry-collector"]["spec"]["path"],
+        )
 
-    def test_root_manages_instance_layer_gates_and_database_collector(self):
-        self.assertEqual(set(self.gates), {*LAYERS, "database-opentelemetry-collector"})
-        self.assertEqual(len(self.root), 5)
+    def test_root_manages_instance_layer_gates_and_standalone_collectors(self):
+        self.assertEqual(set(self.gates), {
+            *LAYERS,
+            "database-opentelemetry-collector",
+            "node-telemetry-collector",
+            "cluster-telemetry-collector",
+        })
+        self.assertEqual(len(self.root), 7)
         self.assertEqual(
             [resource["kind"] for resource in self.root].count("FluxInstance"), 1,
         )
@@ -166,6 +192,8 @@ class FluxLayoutTests(unittest.TestCase):
         workloads = {
             **self.workloads,
             "database-opentelemetry-collector": self.database_resources,
+            "node-telemetry-collector": self.node_resources,
+            "cluster-telemetry-collector": self.cluster_resources,
         }
         for component, resources in workloads.items():
             for resource in resources:
@@ -601,6 +629,259 @@ class FluxLayoutTests(unittest.TestCase):
             "name": "database-telemetry-collector",
             "namespace": "velotime-instrumentation",
         }])
+
+    def test_node_and_cluster_collectors_are_standalone_and_check_generated_workloads(self):
+        expected = {
+            "node-telemetry-collector": (
+                "DaemonSet", "node-telemetry-collector", self.node_resources,
+            ),
+            "cluster-telemetry-collector": (
+                "Deployment", "cluster-telemetry-collector", self.cluster_resources,
+            ),
+        }
+        root_kustomizations = [
+            resource for resource in self.root if resource["apiVersion"] == FLUX_API
+        ]
+        all_kustomizations = root_kustomizations + [
+            resource for _, resource in self.components.values()
+        ]
+        for name, (kind, workload, resources) in expected.items():
+            spec = self.gates[name]["spec"]
+            with self.subTest(component=name):
+                self.assertTrue(spec["suspend"])
+                self.assertEqual(spec["dependsOn"], [{"name": "services"}])
+                self.assertEqual(
+                    spec["path"], f"./clusters/development/{name}",
+                )
+                self.assertEqual(
+                    spec["sourceRef"], {"kind": "GitRepository", "name": "flux-system"},
+                )
+                self.assertEqual(spec["healthChecks"], [{
+                    "apiVersion": "apps/v1",
+                    "kind": kind,
+                    "name": workload,
+                    "namespace": "velotime-instrumentation",
+                }])
+                self.assertFalse(any(
+                    resource["apiVersion"] == FLUX_API
+                    for resource in resources
+                ))
+                for other in all_kustomizations:
+                    if other["metadata"]["name"] == name:
+                        continue
+                    self.assertNotIn(
+                        name,
+                        [
+                            dependency["name"]
+                            for dependency in other["spec"].get("dependsOn", [])
+                        ],
+                    )
+
+    def test_node_collector_has_bounded_node_collection_and_explicit_log_selectors(self):
+        resources = self.node_resources
+        collector = next(
+            resource for resource in resources
+            if resource["kind"] == "OpenTelemetryCollector"
+        )
+        config = collector["spec"]["config"]
+        self.assertEqual(collector["spec"]["mode"], "daemonset")
+        self.assertEqual(collector["spec"]["image"], next(
+            resource["spec"]["image"]
+            for resource in self.cluster_resources
+            if resource["kind"] == "OpenTelemetryCollector"
+        ))
+        self.assertEqual(collector["spec"]["serviceAccount"], "node-telemetry")
+        filelog = config["receivers"]["filelog"]
+        self.assertEqual(filelog["start_at"], "end")
+        self.assertNotIn("storage", filelog)
+        self.assertNotIn("file_storage", config.get("extensions", {}))
+        self.assertEqual(filelog["include"], ["/var/log/pods/*/*/*.log"])
+        self.assertEqual(len(filelog["exclude"]), 3)
+        for pod_name in (
+            "node-telemetry-collector-abc123",
+            "cluster-telemetry-collector-abc123",
+        ):
+            path = f"/var/log/pods/velotime-instrumentation_{pod_name}_uid/collector/0.log"
+            self.assertTrue(any(
+                fnmatch.fnmatch(path, pattern) for pattern in filelog["exclude"]
+            ))
+        for namespace, excluded in (("velotime", True), ("default", False)):
+            path = f"/var/log/pods/{namespace}_example-abc123_uid/app/0.log"
+            with self.subTest(namespace=namespace):
+                self.assertEqual(any(
+                    fnmatch.fnmatch(path, pattern) for pattern in filelog["exclude"]
+                ), excluded)
+
+        selectors = config["processors"]["filter/logs"]["logs"]["log_record"]
+        expected = (
+            ({"k8s.pod.annotation.telemetry.velotime.io/collector": "node-agent"}, True),
+            ({"k8s.pod.annotation.telemetry.velotime.io/collector": "cluster-state"}, True),
+            ({"k8s.pod.annotation.telemetry.velotime.io/otlp-logs": "true"}, True),
+            ({"k8s.namespace.name": "default"}, False),
+            ({}, False),
+        )
+        for attributes, excluded in expected:
+            with self.subTest(attributes=attributes):
+                self.assertEqual(
+                    log_record_is_excluded(selectors, attributes), excluded,
+                )
+
+        annotation_keys = {
+            entry["key"]
+            for entry in config["processors"]["k8sattributes"]["extract"]["annotations"]
+        }
+        self.assertEqual(annotation_keys, {
+            "telemetry.velotime.io/collector",
+            "telemetry.velotime.io/otlp-logs",
+        })
+        missing_metadata_statements = config["processors"]["transform/log-metadata"][
+            "log_statements"
+        ][0]["statements"]
+        self.assertTrue(any(
+            "telemetry.velotime.io/k8s-metadata-missing" in statement
+            and 'resource.attributes["k8s.pod.name"] == nil' in statement
+            for statement in missing_metadata_statements
+        ))
+
+    def test_node_collector_mounts_host_data_read_only_and_uses_minimal_rbac(self):
+        collector = next(
+            resource for resource in self.node_resources
+            if resource["kind"] == "OpenTelemetryCollector"
+        )
+        self.assertEqual(collector["spec"]["mode"], "daemonset")
+        volumes = {
+            volume["name"]: volume["hostPath"]["path"]
+            for volume in collector["spec"]["volumes"]
+        }
+        self.assertEqual(volumes, {"pod-logs": "/var/log/pods", "host-root": "/"})
+        mounts = {
+            mount["name"]: mount
+            for mount in collector["spec"]["volumeMounts"]
+        }
+        self.assertTrue(all(mount["readOnly"] for mount in mounts.values()))
+        config = collector["spec"]["config"]
+        self.assertEqual(
+            config["receivers"]["hostmetrics"]["root_path"],
+            "/hostfs",
+        )
+        cluster_role = next(
+            resource for resource in self.node_resources
+            if resource["kind"] == "ClusterRole"
+        )
+        self.assertEqual({
+            (resource, tuple(rule["verbs"]))
+            for rule in cluster_role["rules"]
+            for resource in rule["resources"]
+        }, {
+            ("nodes", ("get",)),
+            ("nodes/stats", ("get",)),
+            ("pods", ("get", "list", "watch")),
+        })
+
+    def test_node_and_cluster_collectors_use_distinct_read_only_service_accounts(self):
+        expected = {
+            "node-telemetry": self.node_resources,
+            "cluster-telemetry": self.cluster_resources,
+        }
+        for account, resources in expected.items():
+            service_accounts = [
+                resource for resource in resources
+                if resource["kind"] == "ServiceAccount"
+            ]
+            roles = [
+                resource for resource in resources
+                if resource["kind"] == "ClusterRole"
+            ]
+            bindings = [
+                resource for resource in resources
+                if resource["kind"] == "ClusterRoleBinding"
+            ]
+            with self.subTest(service_account=account):
+                self.assertEqual(len(service_accounts), 1)
+                self.assertEqual(service_accounts[0]["metadata"]["name"], account)
+                self.assertEqual(len(roles), 1)
+                self.assertEqual(len(bindings), 1)
+                self.assertEqual(bindings[0]["roleRef"]["name"], roles[0]["metadata"]["name"])
+                self.assertEqual(bindings[0]["subjects"], [{
+                    "kind": "ServiceAccount",
+                    "name": account,
+                    "namespace": "velotime-instrumentation",
+                }])
+                self.assertEqual(
+                    next(
+                        resource["spec"]["serviceAccount"]
+                        for resource in resources
+                        if resource["kind"] == "OpenTelemetryCollector"
+                    ),
+                    account,
+                )
+                self.assertTrue(all(
+                    set(rule["verbs"]) <= {"get", "list", "watch"}
+                    and "*" not in rule["resources"]
+                    for rule in roles[0]["rules"]
+                ))
+
+    def test_node_and_cluster_collectors_export_metrics_to_existing_gateway(self):
+        expected_receivers = {
+            "node-telemetry-collector": {
+                "logs": ["filelog"],
+                "metrics": ["kubeletstats", "hostmetrics"],
+            },
+            "cluster-telemetry-collector": {
+                "metrics": ["k8s_cluster"],
+            },
+        }
+        resources_by_name = {
+            "node-telemetry-collector": self.node_resources,
+            "cluster-telemetry-collector": self.cluster_resources,
+        }
+        endpoint = (
+            "telemetry-collector.velotime-instrumentation.svc.cluster.local:4317"
+        )
+        for name, resources in resources_by_name.items():
+            collector = next(
+                resource for resource in resources
+                if resource["kind"] == "OpenTelemetryCollector"
+            )
+            config = collector["spec"]["config"]
+            with self.subTest(component=name):
+                self.assertEqual(
+                    config["exporters"]["otlp"]["endpoint"], endpoint,
+                )
+                self.assertEqual(
+                    config["exporters"]["otlp"]["tls"], {"insecure": True},
+                )
+                self.assertEqual(
+                    set(config["service"]["pipelines"]),
+                    set(expected_receivers[name]),
+                )
+                for signal, receivers in expected_receivers[name].items():
+                    self.assertEqual(
+                        config["service"]["pipelines"][signal]["receivers"],
+                        receivers,
+                    )
+                self.assertIn("memory_limiter", config["processors"])
+                self.assertIn("batch", config["processors"])
+                self.assertTrue(
+                    config["exporters"]["otlp"]["sending_queue"]["enabled"],
+                )
+                self.assertTrue(
+                    config["exporters"]["otlp"]["retry_on_failure"]["enabled"],
+                )
+
+        node_config = next(
+            resource for resource in self.node_resources
+            if resource["kind"] == "OpenTelemetryCollector"
+        )["spec"]["config"]
+        self.assertTrue(
+            node_config["receivers"]["kubeletstats"]["insecure_skip_verify"],
+        )
+        cluster = next(
+            resource for resource in self.cluster_resources
+            if resource["kind"] == "OpenTelemetryCollector"
+        )
+        self.assertEqual(cluster["spec"]["mode"], "deployment")
+        self.assertEqual(cluster["spec"]["replicas"], 1)
 
     def test_database_collector_scrapes_with_separate_vault_credentials(self):
         resources = self.database_resources
