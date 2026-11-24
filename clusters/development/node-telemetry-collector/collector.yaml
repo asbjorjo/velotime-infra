@@ -36,50 +36,16 @@ spec:
     seccompProfile:
       type: RuntimeDefault
   volumes:
-    - name: pod-logs
-      hostPath:
-        path: /var/log/pods
-        type: Directory
     - name: host-root
       hostPath:
         path: /
         type: Directory
   volumeMounts:
-    - name: pod-logs
-      mountPath: /var/log/pods
-      readOnly: true
     - name: host-root
       mountPath: /hostfs
       readOnly: true
   config:
     receivers:
-      filelog:
-        include:
-          - /var/log/pods/*/*/*.log
-        exclude:
-          - /var/log/pods/velotime-instrumentation_node-telemetry-collector-*/*/*.log
-          - /var/log/pods/velotime-instrumentation_cluster-telemetry-collector-*/*/*.log
-          - /var/log/pods/velotime_*/*/*.log
-        start_at: end
-        include_file_path: true
-        operators:
-          - type: regex_parser
-            id: extract-pod-metadata
-            parse_from: attributes["log.file.path"]
-            regex: '^/var/log/pods/(?P<namespace>[^_]+)_(?P<pod>[^_]+)_(?P<uid>[^/]+)/(?P<container>[^/]+)/'
-          - type: move
-            from: attributes.namespace
-            to: resource["k8s.namespace.name"]
-          - type: move
-            from: attributes.pod
-            to: resource["k8s.pod.name"]
-          - type: move
-            from: attributes.uid
-            to: resource["k8s.pod.uid"]
-          - type: move
-            from: attributes.container
-            to: resource["k8s.container.name"]
-          - type: container
       kubeletstats:
         collection_interval: 30s
         auth_type: serviceAccount
@@ -114,35 +80,6 @@ spec:
         check_interval: 5s
         limit_mib: 384
         spike_limit_mib: 64
-      k8sattributes:
-        auth_type: serviceAccount
-        pod_association:
-          - sources:
-              - from: resource_attribute
-                name: k8s.pod.uid
-        extract:
-          metadata:
-            - k8s.container.name
-          annotations:
-            - tag_name: k8s.pod.annotation.telemetry.velotime.io/collector
-              key: telemetry.velotime.io/collector
-              from: pod
-            - tag_name: k8s.pod.annotation.telemetry.velotime.io/otlp-logs
-              key: telemetry.velotime.io/otlp-logs
-              from: pod
-      filter/logs:
-        error_mode: ignore
-        logs:
-          log_record:
-            - 'resource.attributes["k8s.pod.annotation.telemetry.velotime.io/collector"] == "node-agent"'
-            - 'resource.attributes["k8s.pod.annotation.telemetry.velotime.io/collector"] == "cluster-state"'
-            - 'resource.attributes["k8s.pod.annotation.telemetry.velotime.io/otlp-logs"] == "true"'
-      transform/log-metadata:
-        error_mode: ignore
-        log_statements:
-          - context: log
-            statements:
-              - set(resource.attributes["telemetry.velotime.io/k8s-metadata-missing"], true) where resource.attributes["k8s.pod.name"] == nil
       resource/node:
         attributes:
           - key: k8s.node.name
@@ -167,17 +104,6 @@ spec:
           max_elapsed_time: 5m
     service:
       pipelines:
-        logs:
-          receivers:
-            - filelog
-          processors:
-            - memory_limiter
-            - k8sattributes
-            - filter/logs
-            - transform/log-metadata
-            - batch
-          exporters:
-            - otlp
         metrics:
           receivers:
             - kubeletstats
