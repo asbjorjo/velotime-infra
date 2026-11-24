@@ -37,3 +37,29 @@ metadata:
   namespace: flux-system
 spec:
   path: ./clusters/development/infrastructure/external-dns
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak-operator
+  namespace: flux-system
+spec:
+  patches:
+    - patch: |
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: keycloak-operator
+          namespace: keycloak
+        spec:
+          template:
+            spec:
+              containers:
+                - name: keycloak-operator
+                  resources:
+                    requests:
+                      cpu: 100m
+      target:
+        kind: Deployment
+        name: keycloak-operator
+        namespace: keycloak
