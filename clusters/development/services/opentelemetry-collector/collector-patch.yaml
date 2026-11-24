@@ -4,9 +4,6 @@ metadata:
   name: telemetry
   namespace: velotime-instrumentation
 spec:
-  resources:
-    requests:
-      cpu: 50m
   config:
     exporters:
       otlp:
