@@ -5,3 +5,15 @@ resources:
 patches:
   - path: keycloak-patch.yaml
   - path: httproute-patch.yaml
+  - target:
+      group: k8s.keycloak.org
+      version: v2beta1
+      kind: Keycloak
+      name: keycloak
+      namespace: keycloak
+    patch: |-
+      - op: add
+        path: /spec/additionalOptions/-
+        value:
+          name: metrics-enabled
+          value: "true"

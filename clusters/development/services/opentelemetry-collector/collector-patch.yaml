@@ -5,6 +5,24 @@ metadata:
   namespace: velotime-instrumentation
 spec:
   config:
+    receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: keycloak
+              scrape_interval: 30s
+              metrics_path: /metrics
+              dns_sd_configs:
+                - names:
+                    - keycloak-discovery.keycloak.svc.cluster.local
+                  type: A
+                  port: 9000
     exporters:
       otlp:
         endpoint: monitor.ajjg.no:4317
+    service:
+      pipelines:
+        metrics:
+          receivers:
+            - otlp
+            - prometheus

@@ -540,6 +540,60 @@ class FluxLayoutTests(unittest.TestCase):
                 if "ConnectionStrings__velotimedb" in data:
                     self.assertIn("SSL Mode=Require", data["ConnectionStrings__velotimedb"])
 
+    def test_development_keycloak_tracing_and_metrics_preserve_base_configuration(self):
+        keycloak = next(
+            resource for resource in self.workloads["keycloak"]
+            if resource["kind"] == "Keycloak"
+        )
+        base_resources = build(ROOT / "services/keycloak")
+        base = next(resource for resource in base_resources if resource["kind"] == "Keycloak")
+        self.assertNotIn("tracing", base["spec"])
+        self.assertEqual(keycloak["spec"]["tracing"], {
+            "enabled": True,
+            "endpoint": "http://telemetry-collector.velotime-instrumentation.svc.cluster.local:4317",
+            "samplerType": "traceidratio",
+            "samplerRatio": 1.0,
+        })
+        self.assertEqual(
+            keycloak["spec"]["additionalOptions"],
+            base["spec"]["additionalOptions"] + [{"name": "metrics-enabled", "value": "true"}],
+        )
+        route = next(
+            resource for resource in self.workloads["keycloak"]
+            if resource["kind"] == "HTTPRoute"
+        )
+        base_route = next(resource for resource in base_resources if resource["kind"] == "HTTPRoute")
+        self.assertEqual(route["spec"]["rules"], base_route["spec"]["rules"])
+
+    def test_development_gateway_scrapes_keycloak_and_preserves_otlp_pipelines(self):
+        collector = next(
+            resource for resource in self.workloads["opentelemetry-collector"]
+            if resource["kind"] == "OpenTelemetryCollector"
+        )
+        config = collector["spec"]["config"]
+        self.assertEqual(config["receivers"]["prometheus"]["config"]["scrape_configs"], [{
+            "job_name": "keycloak",
+            "scrape_interval": "30s",
+            "metrics_path": "/metrics",
+            "dns_sd_configs": [{
+                "names": ["keycloak-discovery.keycloak.svc.cluster.local"],
+                "type": "A",
+                "port": 9000,
+            }],
+        }])
+        base = next(
+            resource for resource in build(ROOT / "services/opentelemetry-collector")
+            if resource["kind"] == "OpenTelemetryCollector"
+        )["spec"]["config"]
+        self.assertEqual(config["receivers"]["otlp"], base["receivers"]["otlp"])
+        for signal in ("logs", "traces"):
+            self.assertEqual(config["service"]["pipelines"][signal], base["service"]["pipelines"][signal])
+        self.assertEqual(config["service"]["pipelines"]["metrics"], {
+            **base["service"]["pipelines"]["metrics"],
+            "receivers": ["otlp", "prometheus"],
+        })
+        self.assertEqual(config["exporters"]["otlp"]["tls"], base["exporters"]["otlp"]["tls"])
+
     def test_keycloak_grant_secret_keys_are_available_in_its_component(self):
         resources = self.workloads["keycloak-db-grant"]
         secrets = {
