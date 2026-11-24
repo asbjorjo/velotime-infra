@@ -7,6 +7,9 @@ spec:
   backoffLimit: 3
   ttlSecondsAfterFinished: 300
   template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-dotnet: "false"
     spec:
       restartPolicy: OnFailure
       containers:
