@@ -67,6 +67,35 @@ For each environment that deploys external-dns, populate these secrets in the va
 
 The external-dns service principal needs `Reader` on the resource group and `Contributor` or `DNS Zone Contributor` on the DNS zone. Within the infrastructure layer, `external-dns-secrets` waits for both `external-dns-namespace` and the shared store (`external-secrets-crs`), then its ExternalSecret renders these values into the `external-dns/external-dns-azure-config` Secret's `azure.json` key. The external-dns Kustomization waits for `external-dns-secrets` before reconciling its HelmRelease; OpenTofu no longer creates the namespace or configuration Secret. The shared store does not depend on external-dns.
 
+### Development Keycloak telemetry
+
+The [development Keycloak overlay](clusters/development/services/keycloak/)
+enables native OpenTelemetry tracing and default server metrics. Keycloak sends
+traces over OTLP/gRPC to the existing telemetry gateway, with the
+`traceidratio` sampler set to `1.0` (100%). The
+[gateway overlay](clusters/development/services/opentelemetry-collector/)
+scrapes each Keycloak pod's management `/metrics` endpoint on port 9000 every
+30 seconds, using DNS A records from the operator-managed headless
+`keycloak-discovery` service. Existing OTLP receivers and logs, metrics, and
+traces pipelines continue to forward to the configured monitoring destination.
+No management endpoint is added to the public HTTPRoute.
+
+The headless service publishes not-ready pod addresses, so scrapes can fail
+temporarily during startup or rollout. Collection uses HTTP and OTLP traffic is
+unencrypted on the configured network paths. Traces can include login-event
+details, session IDs, and token IDs; assess access and retention before
+reconciliation. At 100% sampling, monitor volume and resource usage.
+
+Both Keycloak options are build-time settings and may restart its single
+instance; the gateway configuration change can also interrupt existing
+telemetry during its rollout. After reconciliation, check Keycloak readiness,
+the gateway collector logs for scrape/export errors, the discovery service
+endpoints, and `/metrics` on the management interface from inside the cluster.
+Generate a safe test request and verify that Keycloak metrics and traces appear
+at the monitoring destination. Offline rendering does not verify delivery.
+To roll back, revert the development overlay changes and reconcile; allow for
+another Keycloak and collector rollout.
+
 ### Development database and cache metrics
 
 The development [database collector](clusters/development/database-opentelemetry-collector/)

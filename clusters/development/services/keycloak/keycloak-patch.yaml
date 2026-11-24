@@ -6,3 +6,8 @@ metadata:
 spec:
   hostname:
     hostname: https://auth.development.veloti.me
+  tracing:
+    enabled: true
+    endpoint: http://telemetry-collector.velotime-instrumentation.svc.cluster.local:4317
+    samplerType: traceidratio
+    samplerRatio: 1.0
