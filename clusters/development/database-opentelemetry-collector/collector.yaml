@@ -5,9 +5,6 @@ metadata:
   namespace: velotime-instrumentation
 spec:
   mode: deployment
-  resources:
-    requests:
-      cpu: 50m
   envFrom:
     - secretRef:
         name: database-metrics

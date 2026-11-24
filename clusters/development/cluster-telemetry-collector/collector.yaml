@@ -12,7 +12,7 @@ spec:
     telemetry.velotime.io/collector: cluster-state
   resources:
     requests:
-      cpu: 50m
+      cpu: "0"
       memory: 256Mi
     limits:
       cpu: 500m
