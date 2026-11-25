@@ -234,29 +234,15 @@ class FluxLayoutTests(unittest.TestCase):
     def test_facilities_uses_existing_vault_messagebus_connection_string(self):
         self.assert_uses_existing_vault_messagebus_connection_string("module-facilities-api")
 
-    def test_velotime_webui_autoscaling(self):
+    def test_velotime_webui_fixed_replicas(self):
         resources = self.workloads["velotime"]
         release = next(resource for resource in resources if resource["kind"] == "HelmRelease")
-        hpa = next(resource for resource in resources if resource["kind"] == "HorizontalPodAutoscaler")
         self.assertEqual(
-            release["spec"]["values"]["webui"]["resources"]["requests"]["memory"], "512Mi",
+            release["spec"]["values"]["webui"]["resources"]["requests"]["memory"], "256Mi",
         )
-        self.assertEqual(hpa["apiVersion"], "autoscaling/v2")
-        self.assertEqual(hpa["metadata"]["namespace"], release["spec"]["targetNamespace"])
-        self.assertEqual(hpa["spec"], {
-            "scaleTargetRef": {
-                "apiVersion": "apps/v1", "kind": "Deployment", "name": "velotime-webui",
-            },
-            "minReplicas": 2,
-            "maxReplicas": 4,
-            "metrics": [{
-                "type": "ContainerResource",
-                "containerResource": {
-                    "name": "memory", "container": "webui",
-                    "target": {"type": "Utilization", "averageUtilization": 90},
-                },
-            }],
-        })
+        self.assertFalse(any(
+            resource["kind"] == "HorizontalPodAutoscaler" for resource in resources
+        ))
         patches = release["spec"]["postRenderers"][0]["kustomize"]["patches"]
         deployments = [
             {
@@ -276,7 +262,7 @@ class FluxLayoutTests(unittest.TestCase):
                 "patches": patches,
             }))
             rendered = {resource["metadata"]["name"]: resource for resource in build(path)}
-        self.assertNotIn("replicas", rendered["velotime-webui"]["spec"])
+        self.assertEqual(rendered["velotime-webui"]["spec"]["replicas"], 2)
         self.assertEqual(rendered["velotime-module-timing-api"]["spec"]["replicas"], 1)
 
     def test_statistics_api_uses_existing_vault_messagebus_connection_string(self):
