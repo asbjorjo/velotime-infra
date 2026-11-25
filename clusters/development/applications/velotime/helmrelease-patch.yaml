@@ -13,8 +13,9 @@ spec:
               kind: Deployment
               name: velotime-webui
             patch: |-
-              - op: remove
+              - op: replace
                 path: /spec/replicas
+                value: 2
   values:
     global:
       oidcAudience: https://development.veloti.me
@@ -22,7 +23,7 @@ spec:
     webui:
       resources:
         requests:
-          memory: 512Mi
+          memory: 256Mi
       httpRoute:
         hostnames:
           - development.veloti.me
