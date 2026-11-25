@@ -238,6 +238,9 @@ class FluxLayoutTests(unittest.TestCase):
         resources = self.workloads["velotime"]
         release = next(resource for resource in resources if resource["kind"] == "HelmRelease")
         hpa = next(resource for resource in resources if resource["kind"] == "HorizontalPodAutoscaler")
+        self.assertEqual(
+            release["spec"]["values"]["webui"]["resources"]["requests"]["memory"], "512Mi",
+        )
         self.assertEqual(hpa["apiVersion"], "autoscaling/v2")
         self.assertEqual(hpa["metadata"]["namespace"], release["spec"]["targetNamespace"])
         self.assertEqual(hpa["spec"], {

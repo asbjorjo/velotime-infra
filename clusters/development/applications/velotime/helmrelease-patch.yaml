@@ -20,6 +20,9 @@ spec:
       oidcAudience: https://development.veloti.me
       oidcAuthority: https://auth.development.veloti.me/
     webui:
+      resources:
+        requests:
+          memory: 512Mi
       httpRoute:
         hostnames:
           - development.veloti.me
