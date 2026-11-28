@@ -45,13 +45,14 @@ spec:
                   sqlFilter: MessageName = 'InstallationLayoutEvent'
                 - name: LoopStatusEvent
                   sqlFilter: MessageName = 'LoopStatusEvent'
-            - name: x2-sola-dev
-              requiresSession: false
-              rules:
-                - name: PauseAgentCommand
-                  sqlFilter: MessageName = 'PauseAgentCommand'
-                - name: ResumeAgentCommand
-                  sqlFilter: MessageName = 'ResumeAgentCommand'
+                - name: AgentCapabilitiesV1
+                  sqlFilter: MessageName = 'AgentCapabilitiesV1'
+                - name: PassingReplayStatusV1
+                  sqlFilter: MessageName = 'PassingReplayStatusV1'
+        # Commands to agents. Each agent provisions its own subscription at runtime, named
+        # after its agent ID with a correlation filter on AgentId, so none is declared here.
+        - name: velotime-agent-control
+          subscriptions: []
         - name: velotime-timing
           subscriptions:
             - name: statistics
