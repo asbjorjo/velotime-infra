@@ -496,7 +496,7 @@ class FluxLayoutTests(unittest.TestCase):
         self.assertEqual(
             [rule["name"] for rule in agent["infrastructure"]["rules"]],
             [
-                "InstallationLayoutEvent", "LoopStatusEvent",
+                "InstallationLayoutEvent", "LoopStatusV1",
                 "AgentCapabilitiesV1", "PassingReplayStatusV1",
             ],
         )
