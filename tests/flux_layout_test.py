@@ -482,6 +482,27 @@ class FluxLayoutTests(unittest.TestCase):
             }],
         }])
 
+    def test_development_agent_topology_matches_chart_control_plane(self):
+        release = next(
+            resource for resource in self.workloads["velotime"]
+            if resource["kind"] == "HelmRelease"
+        )
+        topics = {
+            topic["name"]: topic
+            for topic in release["spec"]["values"]["messageBusTopology"]["topics"]
+        }
+        agent = {sub["name"]: sub for sub in topics["velotime-agent"]["subscriptions"]}
+        self.assertEqual(set(agent), {"timing", "infrastructure"})
+        self.assertEqual(
+            [rule["name"] for rule in agent["infrastructure"]["rules"]],
+            [
+                "InstallationLayoutEvent", "LoopStatusEvent",
+                "AgentCapabilitiesV1", "PassingReplayStatusV1",
+            ],
+        )
+        # Agents provision their own per-agent subscriptions on the control topic.
+        self.assertEqual(topics["velotime-agent-control"]["subscriptions"], [])
+
     def test_keycloak_database_secrets_are_owned_by_grant(self):
         for name in ("keycloak-db-secret", "keycloak-db-admin-secret"):
             owners = [
