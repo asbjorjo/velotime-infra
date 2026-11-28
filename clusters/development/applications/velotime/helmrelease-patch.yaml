@@ -43,8 +43,8 @@ spec:
               rules:
                 - name: InstallationLayoutEvent
                   sqlFilter: MessageName = 'InstallationLayoutEvent'
-                - name: LoopStatusEvent
-                  sqlFilter: MessageName = 'LoopStatusEvent'
+                - name: LoopStatusV1
+                  sqlFilter: MessageName = 'LoopStatusV1'
                 - name: AgentCapabilitiesV1
                   sqlFilter: MessageName = 'AgentCapabilitiesV1'
                 - name: PassingReplayStatusV1
