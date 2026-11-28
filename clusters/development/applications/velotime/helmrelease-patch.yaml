@@ -36,8 +36,8 @@ spec:
             - name: timing
               requiresSession: true
               rules:
-                - name: PassingEvent
-                  sqlFilter: MessageName = 'PassingEvent'
+                - name: PassingObservedV1
+                  sqlFilter: MessageName = 'PassingObservedV1'
             - name: infrastructure
               requiresSession: false
               rules:
@@ -57,26 +57,19 @@ spec:
             - name: statistics
               requiresSession: true
               rules:
-                - name: TimingSampleComplete
-                  sqlFilter: MessageName = 'TimingSampleComplete'
+                - name: PassingRecordedV1
+                  sqlFilter: MessageName = 'PassingRecordedV1'
                 - name: TransponderOwnershipChanged
                   sqlFilter: MessageName = 'TransponderOwnershipChanged'
-        - name: velotime-statistics
+                - name: InstallationFacilityChangedV1
+                  sqlFilter: MessageName = 'InstallationFacilityChangedV1'
+        - name: velotime-facilities
           subscriptions:
             - name: statistics
               requiresSession: true
               rules:
-                - name: EntryCreated
-                  sqlFilter: MessageName = 'EntryCreated'
-                - name: SampleComplete
-                  sqlFilter: MessageName = 'SampleComplete'
-            - name: statistics-validity
-              requiresSession: false
-              rules:
-                - name: StatisticsValidityThresholdsChangedV1
-                  sqlFilter: MessageName = 'StatisticsValidityThresholdsChangedV1'
-        - name: velotime-facilities
-          subscriptions: []
+                - name: CourseConfigChangedV1
+                  sqlFilter: MessageName = 'CourseConfigChangedV1'
         - name: velotime-notifications
           subscriptions:
             - name: webui-notifications
